@@ -53,6 +53,7 @@ jobs:
           delete-only-untagged-versions: 'true'
 
   delete-runs:
+    needs: build-and-push
     runs-on: ubuntu-latest
     permissions:
       actions: write

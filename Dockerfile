@@ -27,6 +27,8 @@ RUN apk add --no-cache ca-certificates tzdata
 # Copy binary from builder
 COPY --from=builder /build/randimg .
 
+COPY --from=builder /build/.env.example .env
+
 # Copy static files
 COPY --from=builder /build/web/dist ./web/dist
 
