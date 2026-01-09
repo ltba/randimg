@@ -101,8 +101,5 @@ ADMIN_TOKEN=your_secure_token_here
 
 ## 许可证
 
-MIT License
+GPL V3
 
-## 贡献
-
-欢迎提交 Issue 和 Pull Request！
