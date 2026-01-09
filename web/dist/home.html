@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RandImg - 随机图片API服务</title>
+    <link rel="stylesheet" href="css/home.css">
+</head>
+<body>
+    <div class="background" id="background"></div>
+    <div class="background-overlay"></div>
+
+    <div class="container">
+        <h1>🎨 RandImg</h1>
+        <p class="subtitle">强大的随机图片API服务 - 支持多图源、缓存、限流、代理</p>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🚀</div>
+                <div class="feature-title">高性能</div>
+                <div class="feature-desc">内存限流+异步统计</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔒</div>
+                <div class="feature-title">安全可靠</div>
+                <div class="feature-desc">API Key认证</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎯</div>
+                <div class="feature-title">灵活配置</div>
+                <div class="feature-desc">多种返回格式</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📊</div>
+                <div class="feature-title">数据统计</div>
+                <div class="feature-desc">完整的使用分析</div>
+            </div>
+        </div>
+
+        <div class="api-docs">
+            <h2>📖 API 使用文档</h2>
+
+            <div class="api-section">
+                <h3>1. 随机图片接口</h3>
+                <div class="api-endpoint">
+                    <code>GET /api/random</code>
+                </div>
+                <div class="api-params">
+                    <h4>参数说明：</h4>
+                    <table>
+                        <tr>
+                            <th>参数</th>
+                            <th>类型</th>
+                            <th>必填</th>
+                            <th>说明</th>
+                        </tr>
+                        <tr>
+                            <td><code>category</code></td>
+                            <td>string</td>
+                            <td>否</td>
+                            <td>分类slug（如：acg、wallpaper）</td>
+                        </tr>
+                        <tr>
+                            <td><code>device</code></td>
+                            <td>string</td>
+                            <td>否</td>
+                            <td>设备类型：<code>pc</code>（横屏）或 <code>mobile</code>（竖屏）<br>
+                                <strong>不指定时自动从User-Agent识别，默认pc</strong></td>
+                        </tr>
+                        <tr>
+                            <td><code>format</code></td>
+                            <td>string</td>
+                            <td>否</td>
+                            <td>返回格式：<code>redirect</code>（默认，302重定向）、<code>json</code>（JSON数据）、<code>proxy</code>（代理图片）</td>
+                        </tr>
+                        <tr>
+                            <td><code>compress</code></td>
+                            <td>boolean</td>
+                            <td>否</td>
+                            <td>是否压缩图片（仅proxy模式有效）：<code>true</code> 或 <code>false</code>（默认）</td>
+                        </tr>
+                        <tr>
+                            <td><code>api_key</code></td>
+                            <td>string</td>
+                            <td>跨域必填</td>
+                            <td>API密钥（同源访问无需提供）</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="api-examples">
+                    <h4>使用示例：</h4>
+                    <pre># 最简单的用法（自动识别设备）
+&lt;img src="<span id="demo-url-1"></span>/api/random"&gt;
+
+# 指定分类和设备
+&lt;img src="<span id="demo-url-2"></span>/api/random?category=acg&device=mobile"&gt;
+
+# 获取JSON数据
+curl "<span id="demo-url-3"></span>/api/random?format=json"
+
+# 跨域调用（需要API Key）
+curl "<span id="demo-url-4"></span>/api/random?api_key=YOUR_KEY&format=json"</pre>
+                </div>
+            </div>
+
+            <div class="api-section">
+                <h3>2. 图片代理接口</h3>
+                <div class="api-endpoint">
+                    <code>GET /api/proxy/:id</code>
+                </div>
+                <div class="api-params">
+                    <h4>参数说明：</h4>
+                    <table>
+                        <tr>
+                            <th>参数</th>
+                            <th>类型</th>
+                            <th>必填</th>
+                            <th>说明</th>
+                        </tr>
+                        <tr>
+                            <td><code>id</code></td>
+                            <td>number</td>
+                            <td>是</td>
+                            <td>图片ID（路径参数）</td>
+                        </tr>
+                        <tr>
+                            <td><code>compress</code></td>
+                            <td>boolean</td>
+                            <td>否</td>
+                            <td>是否压缩：<code>true</code> 或 <code>false</code>（默认）</td>
+                        </tr>
+                        <tr>
+                            <td><code>format</code></td>
+                            <td>string</td>
+                            <td>否</td>
+                            <td>目标格式：<code>jpeg</code>、<code>png</code></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="api-examples">
+                    <h4>使用示例：</h4>
+                    <pre># 代理原图
+&lt;img src="<span id="demo-url-5"></span>/api/proxy/123"&gt;
+
+# 压缩并转换为JPEG
+&lt;img src="<span id="demo-url-6"></span>/api/proxy/123?compress=true&format=jpeg"&gt;</pre>
+                </div>
+            </div>
+
+            <div class="api-section">
+                <h3>3. 图片列表接口</h3>
+                <div class="api-endpoint">
+                    <code>GET /api/images</code>
+                </div>
+                <div class="api-params">
+                    <h4>参数说明：</h4>
+                    <table>
+                        <tr>
+                            <th>参数</th>
+                            <th>类型</th>
+                            <th>必填</th>
+                            <th>说明</th>
+                        </tr>
+                        <tr>
+                            <td><code>page</code></td>
+                            <td>number</td>
+                            <td>否</td>
+                            <td>页码（默认1）</td>
+                        </tr>
+                        <tr>
+                            <td><code>page_size</code></td>
+                            <td>number</td>
+                            <td>否</td>
+                            <td>每页数量（默认20，最大100）</td>
+                        </tr>
+                        <tr>
+                            <td><code>category</code></td>
+                            <td>string</td>
+                            <td>否</td>
+                            <td>分类slug</td>
+                        </tr>
+                        <tr>
+                            <td><code>device</code></td>
+                            <td>string</td>
+                            <td>否</td>
+                            <td>设备类型：<code>pc</code> 或 <code>mobile</code></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="api-section">
+                <h3>4. 分类列表接口</h3>
+                <div class="api-endpoint">
+                    <code>GET /api/categories</code>
+                </div>
+                <div class="api-examples">
+                    <h4>使用示例：</h4>
+                    <pre>curl "<span id="demo-url-7"></span>/api/categories"</pre>
+                </div>
+            </div>
+
+            <div class="api-section">
+                <h3>🔑 认证说明</h3>
+                <ul>
+                    <li><strong>同源访问</strong>：前端页面访问API无需API Key，不限流</li>
+                    <li><strong>跨域访问</strong>：需要在URL中添加 <code>?api_key=YOUR_KEY</code> 参数</li>
+                    <li><strong>管理API</strong>：需要在请求头添加 <code>Authorization: Bearer admin_secret_token</code></li>
+                </ul>
+            </div>
+
+            <div class="api-section">
+                <h3>⚡ 限流规则</h3>
+                <ul>
+                    <li>同源访问：<strong>不限流</strong></li>
+                    <li>跨域访问：根据API Key配置的限流规则（默认：100次/分钟）</li>
+                    <li>限流算法：滑动窗口（内存实现，高性能）</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="api-demo">
+            <h3>🚀 快速开始</h3>
+            <div># 获取随机图片（JSON格式）</div>
+            <div>curl "<code><span id="demo-url-8"></span>/api/random?api_key=YOUR_KEY&format=json</code>"</div>
+            <br>
+            <div># 获取随机图片（302重定向）</div>
+            <div>curl -L "<code><span id="demo-url-9"></span>/api/random?api_key=YOUR_KEY</code>"</div>
+            <br>
+            <div># 按分类获取</div>
+            <div>curl "<code><span id="demo-url-10"></span>/api/random?api_key=YOUR_KEY&category=acg</code>"</div>
+        </div>
+
+        <div class="buttons">
+            <a href="/admin" class="btn btn-primary">管理后台</a>
+            <a href="/gallery" class="btn btn-secondary">图片画廊</a>
+            <a href="https://github.com/yourusername/randimg" class="btn btn-secondary" target="_blank">GitHub</a>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="stat-images">-</div>
+                <div class="stat-label">总图片数</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="stat-calls">-</div>
+                <div class="stat-label">总调用次数</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="stat-today">-</div>
+                <div class="stat-label">今日调用</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="refresh-bg" onclick="refreshBackground()" title="换一张背景">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+        </svg>
+    </div>
+
+    <script>
+        // 获取当前域名
+        const baseURL = window.location.origin;
+
+        // 填充所有示例URL中的域名
+        document.addEventListener('DOMContentLoaded', function() {
+            for (let i = 1; i <= 10; i++) {
+                const elem = document.getElementById(`demo-url-${i}`);
+                if (elem) elem.textContent = baseURL;
+            }
+        });
+
+        // 加载统计数据
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                document.getElementById('stat-images').textContent = data.total_images || 0;
+                document.getElementById('stat-calls').textContent = data.total_calls || 0;
+                document.getElementById('stat-today').textContent = data.today_calls || 0;
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        // 设置随机背景
+        function setRandomBackground() {
+            // 同源访问不需要API key
+            const bgUrl = '/api/random?category=acg&format=redirect';
+            document.getElementById('background').style.backgroundImage = `url('${bgUrl}')`;
+        }
+
+        // 刷新背景
+        function refreshBackground() {
+            const bg = document.getElementById('background');
+            bg.style.opacity = '0';
+            setTimeout(() => {
+                setRandomBackground();
+                bg.style.transition = 'opacity 0.5s';
+                bg.style.opacity = '1';
+            }, 500);
+        }
+
+        // 初始化
+        loadStats();
+        setRandomBackground();
+    </script>
+</body>
+</html>

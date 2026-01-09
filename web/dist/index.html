@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RandImg 管理后台</title>
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>RandImg 管理后台</h1>
+            <div class="stats" id="stats">
+                <div class="stat-card">
+                    <h3>总图片数</h3>
+                    <p id="stat-images">-</p>
+                </div>
+                <div class="stat-card">
+                    <h3>API Keys</h3>
+                    <p id="stat-keys">-</p>
+                </div>
+                <div class="stat-card">
+                    <h3>今日调用</h3>
+                    <p id="stat-today">-</p>
+                </div>
+                <div class="stat-card">
+                    <h3>总调用次数</h3>
+                    <p id="stat-total">-</p>
+                </div>
+            </div>
+        </header>
+
+        <nav>
+            <button class="nav-btn active" data-section="images">图片管理</button>
+            <button class="nav-btn" data-section="categories">分类管理</button>
+            <button class="nav-btn" data-section="api-keys">API Keys</button>
+            <button class="nav-btn" data-section="stats">统计数据</button>
+            <button class="nav-btn" data-section="script">脚本工具</button>
+        </nav>
+
+        <div class="content">
+            <div id="alert-container"></div>
+
+            <!-- 图片管理 -->
+            <div class="section active" id="section-images">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2>图片管理</h2>
+                    <div>
+                        <button class="btn btn-primary" onclick="showImageModal()">添加图片</button>
+                    </div>
+                </div>
+                <div id="batch-actions" style="display: none; margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+                    <span style="margin-right: 15px;">已选择 <strong id="selected-count">0</strong> 张图片</span>
+                    <button class="btn btn-sm btn-primary" onclick="showBatchUpdateModal()">批量修改</button>
+                    <button class="btn btn-sm btn-danger" onclick="batchDeleteImages()">批量删除</button>
+                    <button class="btn btn-sm" onclick="clearSelection()">取消选择</button>
+                </div>
+                <table id="images-table">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="select-all-images" onchange="toggleSelectAll()"></th>
+                            <th>ID</th>
+                            <th>预览</th>
+                            <th>URL</th>
+                            <th>尺寸</th>
+                            <th>分类</th>
+                            <th>来源</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div class="pagination" id="images-pagination"></div>
+            </div>
+
+            <!-- 分类管理 -->
+            <div class="section" id="section-categories">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2>分类管理</h2>
+                    <button class="btn btn-primary" onclick="showCategoryModal()">添加分类</button>
+                </div>
+                <table id="categories-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>名称</th>
+                            <th>Slug</th>
+                            <th>描述</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- API Keys管理 -->
+            <div class="section" id="section-api-keys">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2>API Keys</h2>
+                    <button class="btn btn-primary" onclick="showAPIKeyModal()">创建API Key</button>
+                </div>
+                <table id="api-keys-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Key</th>
+                            <th>限流(次/分钟)</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th>最后使用</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- 统计数据 -->
+            <div class="section" id="section-stats">
+                <h2>统计数据</h2>
+                <p style="color: #666; margin-top: 10px;">选择API Key查看调用统计</p>
+                <div class="form-group" style="max-width: 300px; margin-top: 20px;">
+                    <label>API Key</label>
+                    <select id="stats-api-key" onchange="loadStats()">
+                        <option value="">请选择</option>
+                    </select>
+                </div>
+                <table id="stats-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>API Key ID</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div id="stats-summary" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; display: none;">
+                    <h3>统计摘要</h3>
+                    <p>总调用次数: <strong id="stats-total">0</strong></p>
+                </div>
+            </div>
+
+            <!-- 脚本工具 -->
+            <div class="section" id="section-script">
+                <h2>脚本工具</h2>
+                <p style="color: #666; margin: 15px 0;">使用JavaScript批量添加图片。脚本在浏览器中执行，可以调用 <code>addImage()</code> 函数。</p>
+
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 10px;">可用函数：</h3>
+                    <pre style="background: #2d3748; color: #68d391; padding: 15px; border-radius: 4px; overflow-x: auto; font-size: 13px;">
+// 添加单张图片
+await addImage({
+    source_url: "https://example.com/image.jpg",
+    category_id: 1,
+    width: 1920,
+    height: 1080,
+    format: "jpeg",
+    source: "来源说明",
+    auto_fetch: true  // 自动获取图片信息
+});
+
+// 获取所有分类
+const categories = await getCategories();
+console.log(categories);
+
+// 延迟函数（避免请求过快）
+await sleep(1000); // 延迟1秒</pre>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="font-weight: 600; display: block; margin-bottom: 5px;">脚本编辑器：</label>
+                    <textarea id="script-editor" style="width: 100%; height: 400px; font-family: 'Courier New', monospace; padding: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">// 点击下方按钮加载示例代码
+// 或者直接编写你的批量操作脚本
+
+// 可用函数：
+// - await addImage(data)
+// - await getCategories()
+// - await sleep(ms)
+// - console.log/error/warn/info
+
+</textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button class="btn btn-primary" onclick="executeScript()">执行脚本</button>
+                    <button class="btn btn-secondary" onclick="clearScriptLog()">清空日志</button>
+                    <button class="btn btn-secondary" onclick="loadScriptExample('unsplash')">示例：Unsplash</button>
+                    <button class="btn btn-secondary" onclick="loadScriptExample('simple')">示例：简单批量</button>
+                </div>
+
+                <div style="background: #2d3748; color: #fff; padding: 15px; border-radius: 8px; height: 300px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 13px;" id="script-log">
+                    <div style="color: #68d391;">控制台输出：</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片模态框 -->
+    <div class="modal" id="image-modal">
+        <div class="modal-content">
+            <h2 id="image-modal-title">添加图片</h2>
+            <form id="image-form">
+                <input type="hidden" id="image-id">
+                <div class="form-group">
+                    <label>图片URL *</label>
+                    <input type="url" id="image-url" required>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="image-auto-fetch" checked>
+                        自动获取图片信息（尺寸和格式）
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>分类 *</label>
+                    <select id="image-category" required></select>
+                </div>
+                <div class="form-group">
+                    <label>宽度</label>
+                    <input type="number" id="image-width">
+                </div>
+                <div class="form-group">
+                    <label>高度</label>
+                    <input type="number" id="image-height">
+                </div>
+                <div class="form-group">
+                    <label>格式</label>
+                    <input type="text" id="image-format" placeholder="jpeg, png, webp">
+                </div>
+                <div class="form-group">
+                    <label>来源</label>
+                    <input type="text" id="image-source" placeholder="Unsplash, Pexels, etc.">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                    <button type="button" class="btn" onclick="closeModal('image-modal')">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 分类模态框 -->
+    <div class="modal" id="category-modal">
+        <div class="modal-content">
+            <h2 id="category-modal-title">添加分类</h2>
+            <form id="category-form">
+                <input type="hidden" id="category-id">
+                <div class="form-group">
+                    <label>名称 *</label>
+                    <input type="text" id="category-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Slug *</label>
+                    <input type="text" id="category-slug" required placeholder="acg, landscape, etc.">
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <textarea id="category-description"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                    <button type="button" class="btn" onclick="closeModal('category-modal')">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- API Key模态框 -->
+    <div class="modal" id="apikey-modal">
+        <div class="modal-content">
+            <h2 id="apikey-modal-title">创建API Key</h2>
+            <form id="apikey-form">
+                <input type="hidden" id="apikey-id">
+                <div class="form-group">
+                    <label>API Key（留空自动生成）</label>
+                    <input type="text" id="apikey-key" placeholder="留空则自动生成随机Key">
+                    <small style="color: #666; font-size: 12px;">建议使用32-64位随机字符串</small>
+                </div>
+                <div class="form-group">
+                    <label>限流(次/分钟) *</label>
+                    <input type="number" id="apikey-ratelimit" required min="1" value="60">
+                </div>
+                <div class="form-group" id="apikey-status-group" style="display: none;">
+                    <label>状态</label>
+                    <select id="apikey-status">
+                        <option value="active">激活</option>
+                        <option value="revoked">已吊销</option>
+                    </select>
+                </div>
+                <div id="apikey-result" style="display: none;">
+                    <div class="form-group">
+                        <label>生成的API Key</label>
+                        <div class="token-display" id="apikey-token"></div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="apikey-submit">保存</button>
+                    <button type="button" class="btn" onclick="closeModal('apikey-modal')">关闭</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 批量更新模态框 -->
+    <div class="modal" id="batch-update-modal">
+        <div class="modal-content">
+            <h2>批量修改图片</h2>
+            <p style="color: #666; margin-bottom: 20px;">将对选中的 <strong id="batch-update-count">0</strong> 张图片进行修改</p>
+            <form id="batch-update-form">
+                <div class="form-group">
+                    <label>分类</label>
+                    <select id="batch-category">
+                        <option value="">不修改</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>状态</label>
+                    <select id="batch-status">
+                        <option value="">不修改</option>
+                        <option value="active">激活</option>
+                        <option value="inactive">暂时下线</option>
+                        <option value="deleted">已删除</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>来源</label>
+                    <input type="text" id="batch-source" placeholder="不填则不修改">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">确认修改</button>
+                    <button type="button" class="btn" onclick="closeModal('batch-update-modal')">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+services:
+  randimg:
+    image: ghcr.io/ltba/randimg:latest
+    container_name: randimg
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+      - .env:/app/.env
+    environment:
+      - GIN_MODE=release
+    networks:
+      - randimg-network
+
+networks:
+  randimg-network:
+    driver: bridge
