@@ -41,7 +41,7 @@
       <div v-if="gh.mode === 'mirror'" class="form-group">
         <label>镜像 Base URL *</label>
         <input v-model="gh.baseUrl" type="url" placeholder="https://mirror.example.com/repo" />
-        <small>图源地址 = Base URL + 仓库内路径; 末尾斜杠自动忽略</small>
+        <small>图源地址 = Base URL + 仓库内完整路径 (含子目录), 末尾斜杠自动忽略<br />例: 仓库子目录 randomimg/ + Base URL https://example.com/randomimg → 图源 …/randomimg/randomimg/文件名.jpg</small>
       </div>
       <div class="form-group">
         <label>分类 *</label>
