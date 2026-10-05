@@ -310,12 +310,19 @@
             margin-top: 5px;
         }
 
-        .refresh-bg {
+        .fab-group {
             position: fixed;
             bottom: 30px;
             right: 30px;
-            width: 60px;
-            height: 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .fab {
+            width: 52px;
+            height: 52px;
             background: rgba(255, 255, 255, 0.9);
             border-radius: 50%;
             display: flex;
@@ -324,19 +331,38 @@
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             transition: transform 0.2s;
-            z-index: 100;
+            color: #333;
+            text-decoration: none;
+            border: none;
+            padding: 0;
         }
 
-        .refresh-bg:hover {
-            transform: scale(1.1) rotate(90deg);
+        .fab:hover {
+            transform: scale(1.1);
         }
 
-        .refresh-bg svg {
-            width: 24px;
-            height: 24px;
+        .fab svg {
+            width: 22px;
+            height: 22px;
         }
 
         @media (max-width: 768px) {
+            .fab-group {
+                bottom: 16px;
+                right: 16px;
+                gap: 10px;
+            }
+
+            .fab {
+                width: 46px;
+                height: 46px;
+            }
+
+            .fab svg {
+                width: 20px;
+                height: 20px;
+            }
+
             .container {
                 padding: 30px;
             }
