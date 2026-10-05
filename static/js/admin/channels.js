@@ -48,7 +48,7 @@ export async function load() {
                 <td class="cell-channel" data-copy="${ch.channel_id}" title="点击复制完整Channel ID">${ch.channel_id}</td>
                 <td>${ch.rate_limit}</td>
                 <td class="cell-origins" title="${origins}">${origins}</td>
-                <td><span class="${ch.status === 'active' ? 'status-active' : 'status-inactive'}">${ch.status}</span></td>
+                <td><span class="pill ${ch.status === 'active' ? 'pill-ok' : 'pill-off'}">${ch.status}</span></td>
                 <td>${formatDate(ch.created_at)}</td>
                 <td>${formatDate(ch.last_used_at)}</td>
                 <td>

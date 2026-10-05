@@ -14,6 +14,20 @@ export function init() {
     document.getElementById('btn-batch-delete').addEventListener('click', batchDelete);
     document.getElementById('btn-clear-selection').addEventListener('click', clearSelection);
     document.getElementById('batch-update-form').addEventListener('submit', onBatchUpdate);
+    document.getElementById('filter-status').addEventListener('change', () => load(1));
+    document.getElementById('filter-fetch').addEventListener('change', () => load(1));
+
+    // URL 列点击复制 (事件委托).
+    document.addEventListener('click', (e) => {
+        const cell = e.target.closest('#images-table .cell-url');
+        if (cell && cell.dataset.url) {
+            navigator.clipboard.writeText(cell.dataset.url).then(() => {
+                const original = cell.textContent;
+                cell.textContent = '已复制!';
+                setTimeout(() => { cell.textContent = original; }, 800);
+            });
+        }
+    });
 
     // 行内编辑/删除与选择框委托.
     document.addEventListener('click', async (e) => {
@@ -40,21 +54,33 @@ export function init() {
 
 export async function load(page = 1) {
     try {
-        const data = await adminRequest(`/images?page=${page}&page_size=20`);
+        const params = new URLSearchParams({ page: String(page), page_size: '20' });
+        const status = document.getElementById('filter-status').value;
+        const fetchFailed = document.getElementById('filter-fetch').value;
+        if (status) params.set('status', status);
+        if (fetchFailed) params.set('fetch_failed', fetchFailed);
+
+        const data = await adminRequest(`/images?${params}`);
         const tbody = document.querySelector('#images-table tbody');
         tbody.innerHTML = '';
 
         data.data.forEach(image => {
+            const info = (image.width && image.height)
+                ? `${image.width} x ${image.height}`
+                : '-';
+            const fetchCell = image.fetch_fails >= 3
+                ? '<span class="pill pill-warn">失败 ' + image.fetch_fails + '</span>'
+                : (info === '-' ? '<span class="pill pill-off">待补全</span>' : '<span class="pill pill-ok">完整</span>');
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><input type="checkbox" class="image-checkbox" value="${image.id}" ${selectedImages.has(image.id) ? 'checked' : ''}></td>
-                <td>${image.id}</td>
+                <td class="num">${image.id}</td>
                 <td><img src="${image.source_url}" class="thumb" loading="lazy" alt=""></td>
-                <td class="cell-url" title="${image.source_url}">${image.source_url}</td>
-                <td>${image.width || '-'} x ${image.height || '-'}</td>
+                <td class="cell-url" data-url="${image.source_url}" title="${image.source_url} (点击复制)">${image.source_url}</td>
+                <td class="num">${info}</td>
                 <td>${image.category ? image.category.name : '-'}</td>
-                <td>${image.source || '-'}</td>
-                <td><span class="${image.status === 'active' ? 'status-active' : 'status-inactive'}">${image.status}</span></td>
+                <td>${fetchCell}</td>
+                <td><span class="pill ${image.status === 'active' ? 'pill-ok' : 'pill-off'}">${image.status}</span></td>
                 <td>
                     <button class="btn btn-sm btn-primary" data-action="edit" data-id="${image.id}">编辑</button>
                     <button class="btn btn-sm btn-danger" data-action="delete" data-id="${image.id}">删除</button>

@@ -148,6 +148,7 @@ func main() {
 		adminGroup.GET("/stats/overview", stats.OverviewStats)
 
 		adminGroup.POST("/import/github", ghimp.ImportFromGitHub)
+		adminGroup.POST("/import/github/preview", ghimp.PreviewImport)
 	}
 
 	// 静态页面: 资源落点 static/.

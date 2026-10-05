@@ -53,6 +53,9 @@ func (h *Handler) ListImages(c *gin.Context) {
 	if status := c.Query("status"); status != "" {
 		q = q.Where("status = ?", status)
 	}
+	if c.Query("fetch_failed") == "true" {
+		q = q.Where("fetch_fails >= ?", 3)
+	}
 	if category := c.Query("category"); category != "" {
 		var cat store.Category
 		if err := store.DB.Where("slug = ?", category).First(&cat).Error; err == nil {

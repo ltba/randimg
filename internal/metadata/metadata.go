@@ -16,11 +16,14 @@ import (
 	"time"
 
 	"randimg/internal/store"
+
+	"gorm.io/gorm"
 )
 
 const (
-	queueCap  = 10000
-	scanLimit = 1000
+	queueCap      = 10000
+	scanLimit     = 1000
+	maxFetchFails = 3 // 连续失败达此次数后不再重扫
 )
 
 // MetadataFetchService 后台元数据补全服务.
@@ -73,11 +76,11 @@ func (s *MetadataFetchService) Enqueue(imageID uint) bool {
 	}
 }
 
-// scanPending 启动扫描: 缺失宽/高/文件格式的 active 图片.
+// scanPending 启动扫描: 缺失宽/高/文件格式的 active 图片; 连续失败 >= maxFetchFails 的跳过.
 func (s *MetadataFetchService) scanPending() {
 	var images []store.Image
 	if err := store.DB.
-		Where("(width IS NULL OR height IS NULL OR format = '' OR format IS NULL) AND status = ?", "active").
+		Where("(width IS NULL OR height IS NULL OR format = '' OR format IS NULL) AND status = ? AND fetch_fails < ?", "active", maxFetchFails).
 		Limit(scanLimit).Find(&images).Error; err != nil {
 		log.Printf("[metadata] scan failed: %v", err)
 		return
@@ -115,7 +118,15 @@ func (s *MetadataFetchService) process(imageID uint) {
 	info, err := s.fetchInfo(img.SourceURL)
 	if err != nil {
 		log.Printf("[metadata] fetch failed for image %d: %v", imageID, err)
+		if err := store.DB.Model(&img).UpdateColumn("fetch_fails", gorm.Expr("fetch_fails + 1")).Error; err != nil {
+			log.Printf("[metadata] mark fail for image %d: %v", imageID, err)
+		}
 		return
+	}
+	if img.FetchFails > 0 {
+		if err := store.DB.Model(&img).UpdateColumn("fetch_fails", 0).Error; err != nil {
+			log.Printf("[metadata] clear fail flag for image %d: %v", imageID, err)
+		}
 	}
 
 	// 只填空缺字段, 不覆盖已有值.

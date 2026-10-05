@@ -21,6 +21,7 @@ type Image struct {
 	Format     string    `gorm:"type:varchar(10)" json:"format"`
 	Source     string    `gorm:"type:varchar(255)" json:"source"`
 	Status     string    `gorm:"type:varchar(20);not null;default:'active'" json:"status"`
+	FetchFails uint      `gorm:"not null;default:0" json:"fetch_fails"` // 元数据补全连续失败次数; >=3 不再重扫
 	CategoryID uint      `gorm:"not null;index" json:"category_id"`
 	Category   *Category `gorm:"foreignKey:CategoryID" json:"category,omitempty"`
 	CreatedAt  time.Time `json:"created_at"`
