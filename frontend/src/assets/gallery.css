@@ -99,9 +99,8 @@
     display: none;
 }
 
-/* Lightbox */
+/* Lightbox: v-if 控制挂载, 无需 display 切换 */
 .lightbox {
-    display: none;
     position: fixed;
     top: 0;
     left: 0;
@@ -111,9 +110,6 @@
     z-index: 2000;
     align-items: center;
     justify-content: center;
-}
-
-.lightbox.active {
     display: flex;
 }
 

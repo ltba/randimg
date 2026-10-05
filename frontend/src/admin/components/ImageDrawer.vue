@@ -43,9 +43,9 @@
               <span class="value" :title="image.source_url">{{ image.source_url }}</span>
               <span class="copy-hint">{{ copied === 'source' ? '已复制!' : '复制' }}</span>
             </div>
-            <div class="url-row" @click="copy(`/api/proxy/${image.id}`, 'proxy')">
+            <div class="url-row" @click="copy(`${origin}/api/proxy/${image.id}`, 'proxy')">
               <span class="label">代理 URL</span>
-              <span class="value">/api/proxy/{{ image.id }}</span>
+              <span class="value">{{ origin }}/api/proxy/{{ image.id }}</span>
               <span class="copy-hint">{{ copied === 'proxy' ? '已复制!' : '复制' }}</span>
             </div>
           </div>
@@ -70,6 +70,9 @@ defineProps<{ image: Image | null }>();
 defineEmits<{ close: []; edit: [image: Image]; remove: [image: Image] }>();
 
 const copied = ref<'source' | 'proxy' | null>(null);
+
+// 代理 URL 展示与复制带完整域名, 复制即用.
+const origin = location.origin;
 
 async function copy(text: string, which: 'source' | 'proxy' = 'source') {
   if (await copyText(text)) {
