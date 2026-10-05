@@ -60,6 +60,24 @@ func (h *Handler) ListImages(c *gin.Context) {
 		var cat store.Category
 		if err := store.DB.Where("slug = ?", category).First(&cat).Error; err == nil {
 			q = q.Where("category_id = ?", cat.ID)
+		} else {
+			c.JSON(http.StatusOK, gin.H{
+				"data": []store.Image{},
+				"pagination": gin.H{
+					"page": page, "page_size": pageSize, "total": 0, "total_page": 0,
+				},
+			})
+			return
+		}
+	}
+	if search := c.Query("q"); search != "" {
+		like := "%" + search + "%"
+		q = q.Where("source_url LIKE ? OR source LIKE ?", like, like)
+	}
+	if category := c.Query("category"); category != "" {
+		var cat store.Category
+		if err := store.DB.Where("slug = ?", category).First(&cat).Error; err == nil {
+			q = q.Where("category_id = ?", cat.ID)
 		}
 	}
 

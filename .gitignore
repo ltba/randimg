@@ -44,3 +44,7 @@ Thumbs.db
 .agents/
 .pi/
 AGENTS.md
+
+# Frontend
+frontend/node_modules/
+frontend/dist/

@@ -1,3 +1,16 @@
+# Frontend stage — Vue 3 + Vite + TypeScript, 产物三入口 (admin/home/gallery).
+FROM node:24-alpine AS frontend
+
+RUN npm install -g pnpm@12.4.2
+
+WORKDIR /fe
+
+COPY frontend/package.json frontend/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+COPY frontend/ .
+RUN pnpm build
+
 # Build stage — 固定在构建机原生平台, Go 交叉编译产出目标架构二进制 (CGO=0), 不经 QEMU.
 FROM --platform=$BUILDPLATFORM golang:1.23-alpine AS builder
 
@@ -26,6 +39,7 @@ WORKDIR /app
 
 COPY --from=builder /build/randimg .
 COPY --from=builder /build/static ./static
+COPY --from=frontend /fe/dist ./frontend/dist
 
 # data 目录由程序启动时自动创建; 卷挂载点权限由部署侧保证.
 

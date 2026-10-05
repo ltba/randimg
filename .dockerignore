@@ -13,3 +13,7 @@ data
 # 文档
 README.md
 LICENSE
+
+# 前端构建本地产物 (镜像内由 frontend stage 现场构建)
+frontend/node_modules
+frontend/dist

@@ -22,6 +22,7 @@ import (
 	"randimg/internal/metadata"
 	"randimg/internal/metrics"
 	"randimg/internal/store"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -151,7 +152,16 @@ func main() {
 		adminGroup.POST("/import/github/preview", ghimp.PreviewImport)
 	}
 
-	// 静态页面: 资源落点 static/.
+	// 静态页面与前端产物: 协商缓存, 版本更新即时生效.
+	r.Use(func(c *gin.Context) {
+		p := c.Request.URL.Path
+		if p == "/" || p == "/admin" || p == "/gallery" ||
+			strings.HasPrefix(p, "/css/") || strings.HasPrefix(p, "/js/") || strings.HasPrefix(p, "/assets/") {
+			c.Header("Cache-Control", "no-cache")
+		}
+		c.Next()
+	})
+
 	r.StaticFile("/admin", "./static/admin.html")
 	r.Static("/css", "./static/css")
 	r.Static("/js", "./static/js")
