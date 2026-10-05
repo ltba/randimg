@@ -1,5 +1,5 @@
-// Gallery page with lazy loading
-const API_BASE = '/api';
+// gallery.js — 画廊页: 无限滚动, 懒加载, lightbox; 公开接口经 core 请求层.
+import { pubRequest } from './core.js';
 
 let currentPage = 1;
 let isLoading = false;
@@ -7,7 +7,6 @@ let hasMore = true;
 let allImages = [];
 let currentLightboxIndex = 0;
 
-// Intersection Observer for lazy loading
 const imageObserver = new IntersectionObserver((entries, observer) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -24,40 +23,17 @@ const imageObserver = new IntersectionObserver((entries, observer) => {
     rootMargin: '50px'
 });
 
-// Infinite scroll observer
 const scrollObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting && !isLoading && hasMore) {
-            loadMoreImages();
-        }
-    });
+    if (entries.some(entry => entry.isIntersecting) && !isLoading && hasMore) {
+        loadImages(currentPage + 1, true);
+    }
 }, {
     rootMargin: '200px'
 });
 
-// API request helper (同域名下不需要API key)
-async function apiRequest(url, options = {}) {
-    const headers = {
-        'Content-Type': 'application/json',
-        ...options.headers
-    };
-
-    const response = await fetch(API_BASE + url, {
-        ...options,
-        headers
-    });
-
-    if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-    }
-
-    return await response.json();
-}
-
-// Load categories
 async function loadCategories() {
     try {
-        const categories = await apiRequest('/categories');
+        const categories = await pubRequest('/categories');
         const select = document.getElementById('category-filter');
         categories.forEach(cat => {
             const option = document.createElement('option');
@@ -70,7 +46,6 @@ async function loadCategories() {
     }
 }
 
-// Load images
 async function loadImages(page = 1, append = false) {
     if (isLoading) return;
     isLoading = true;
@@ -83,10 +58,10 @@ async function loadImages(page = 1, append = false) {
         const device = document.getElementById('device-filter').value;
 
         let url = `/images?page=${page}&page_size=20`;
-        if (category) url += `&category=${category}`;
+        if (category) url += `&category=${encodeURIComponent(category)}`;
         if (device) url += `&device=${device}`;
 
-        const data = await apiRequest(url);
+        const data = await pubRequest(url);
 
         if (!append) {
             allImages = [];
@@ -98,7 +73,6 @@ async function loadImages(page = 1, append = false) {
 
         hasMore = data.pagination.page < data.pagination.total_page;
         currentPage = page;
-
     } catch (error) {
         console.error('Failed to load images:', error);
     } finally {
@@ -107,30 +81,21 @@ async function loadImages(page = 1, append = false) {
     }
 }
 
-// Load more images (infinite scroll)
-async function loadMoreImages() {
-    await loadImages(currentPage + 1, true);
-}
-
-// Render images
 function renderImages(images, append = false) {
     const grid = document.getElementById('gallery-grid');
-
     if (!append) {
         grid.innerHTML = '';
     }
 
-    images.forEach((image, index) => {
+    images.forEach((image) => {
         const item = document.createElement('div');
         item.className = 'gallery-item';
-        item.onclick = () => openLightbox(allImages.indexOf(image));
+        item.addEventListener('click', () => openLightbox(allImages.indexOf(image)));
 
         const img = document.createElement('img');
         img.setAttribute('data-src', image.source_url);
         img.alt = image.category?.name || 'Image';
         img.loading = 'lazy';
-
-        // Observe for lazy loading
         imageObserver.observe(img);
 
         const info = document.createElement('div');
@@ -142,42 +107,32 @@ function renderImages(images, append = false) {
 
         const dimensions = document.createElement('div');
         dimensions.className = 'dimensions';
-        if (image.width && image.height) {
-            dimensions.textContent = `${image.width} × ${image.height}`;
-        } else {
-            dimensions.textContent = '尺寸未知';
-        }
+        dimensions.textContent = image.width && image.height
+            ? `${image.width} × ${image.height}`
+            : '尺寸未知';
 
         info.appendChild(category);
         info.appendChild(dimensions);
-
         item.appendChild(img);
         item.appendChild(info);
         grid.appendChild(item);
     });
 
-    // Observe the last item for infinite scroll
     const items = grid.querySelectorAll('.gallery-item');
     if (items.length > 0) {
         scrollObserver.observe(items[items.length - 1]);
     }
 }
 
-// Lightbox functions
 function openLightbox(index) {
     currentLightboxIndex = index;
-    const lightbox = document.getElementById('lightbox');
-    const img = document.getElementById('lightbox-img');
-    img.src = allImages[index].source_url;
-    lightbox.classList.add('active');
-
-    // Keyboard navigation
+    document.getElementById('lightbox-img').src = allImages[index].source_url;
+    document.getElementById('lightbox').classList.add('active');
     document.addEventListener('keydown', handleLightboxKeyboard);
 }
 
 function closeLightbox() {
-    const lightbox = document.getElementById('lightbox');
-    lightbox.classList.remove('active');
+    document.getElementById('lightbox').classList.remove('active');
     document.removeEventListener('keydown', handleLightboxKeyboard);
 }
 
@@ -188,9 +143,7 @@ function navigateLightbox(direction) {
     } else if (currentLightboxIndex >= allImages.length) {
         currentLightboxIndex = 0;
     }
-
-    const img = document.getElementById('lightbox-img');
-    img.src = allImages[currentLightboxIndex].source_url;
+    document.getElementById('lightbox-img').src = allImages[currentLightboxIndex].source_url;
 }
 
 function handleLightboxKeyboard(e) {
@@ -203,22 +156,16 @@ function handleLightboxKeyboard(e) {
     }
 }
 
-// Filter change handlers
-document.getElementById('category-filter').addEventListener('change', () => {
-    loadImages(1, false);
-});
-
-document.getElementById('device-filter').addEventListener('change', () => {
-    loadImages(1, false);
-});
-
-// Close lightbox on background click
+document.getElementById('category-filter').addEventListener('change', () => loadImages(1, false));
+document.getElementById('device-filter').addEventListener('change', () => loadImages(1, false));
+document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+document.getElementById('lightbox-prev').addEventListener('click', () => navigateLightbox(-1));
+document.getElementById('lightbox-next').addEventListener('click', () => navigateLightbox(1));
 document.getElementById('lightbox').addEventListener('click', (e) => {
     if (e.target.id === 'lightbox') {
         closeLightbox();
     }
 });
 
-// Initialize
 loadCategories();
 loadImages();

@@ -151,7 +151,7 @@ func main() {
 	}
 
 	// 静态页面: 资源落点 static/.
-	r.Static("/admin", "./static")
+	r.StaticFile("/admin", "./static/admin.html")
 	r.Static("/css", "./static/css")
 	r.Static("/js", "./static/js")
 	r.GET("/", func(c *gin.Context) { c.File("./static/home.html") })

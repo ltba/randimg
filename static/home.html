@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RandImg - 随机图片API服务</title>
-    <link rel="stylesheet" href="css/home.css">
+    <link rel="stylesheet" href="/css/home.css">
 </head>
 <body>
     <div class="background" id="background"></div>
@@ -89,17 +89,17 @@
                 </div>
                 <div class="api-examples">
                     <h4>使用示例：</h4>
-                    <pre># 最简单的用法（自动识别设备）
-&lt;img src="<span id="demo-url-1"></span>/api/random"&gt;
+                    <pre># 最简单的用法（自动识别设备, 同源相对路径）
+&lt;img src="/api/random"&gt;
 
 # 指定分类和设备
-&lt;img src="<span id="demo-url-2"></span>/api/random?category=acg&device=mobile"&gt;
+&lt;img src="/api/random?category=acg&amp;device=mobile"&gt;
 
 # 获取JSON数据
-curl "<span id="demo-url-3"></span>/api/random?output=json"
+curl "/api/random?output=json"
 
 # 携带Channel（计量与独立限流）
-curl "<span id="demo-url-4"></span>/api/random?channel_id=YOUR_CHANNEL&output=json"</pre>
+curl "/api/random?channel_id=YOUR_CHANNEL&amp;output=json"</pre>
                 </div>
             </div>
 
@@ -140,10 +140,10 @@ curl "<span id="demo-url-4"></span>/api/random?channel_id=YOUR_CHANNEL&output=js
                 <div class="api-examples">
                     <h4>使用示例：</h4>
                     <pre># 代理原图
-&lt;img src="<span id="demo-url-5"></span>/api/proxy/123"&gt;
+&lt;img src="/api/proxy/123"&gt;
 
 # 压缩并转换为JPEG
-&lt;img src="<span id="demo-url-6"></span>/api/proxy/123?compress=true&format=jpeg"&gt;</pre>
+&lt;img src="/api/proxy/123?compress=true&amp;format=jpeg"&gt;</pre>
                 </div>
             </div>
 
@@ -196,7 +196,7 @@ curl "<span id="demo-url-4"></span>/api/random?channel_id=YOUR_CHANNEL&output=js
                 </div>
                 <div class="api-examples">
                     <h4>使用示例：</h4>
-                    <pre>curl "<span id="demo-url-7"></span>/api/categories"</pre>
+                    <pre>curl "/api/categories"</pre>
                 </div>
             </div>
 
@@ -223,19 +223,19 @@ curl "<span id="demo-url-4"></span>/api/random?channel_id=YOUR_CHANNEL&output=js
         <div class="api-demo">
             <h3>🚀 快速开始</h3>
             <div># 获取随机图片（JSON格式）</div>
-            <div>curl "<code><span id="demo-url-8"></span>/api/random?output=json</code>"</div>
+            <div>curl "<code>/api/random?output=json</code>"</div>
             <br>
             <div># 获取随机图片（302重定向）</div>
-            <div>curl -L "<code><span id="demo-url-9"></span>/api/random</code>"</div>
+            <div>curl -L "<code>/api/random</code>"</div>
             <br>
             <div># 按分类获取</div>
-            <div>curl "<code><span id="demo-url-10"></span>/api/random?category=acg</code>"</div>
+            <div>curl "<code>/api/random?category=acg</code>"</div>
         </div>
 
         <div class="buttons">
             <a href="/admin" class="btn btn-primary">管理后台</a>
             <a href="/gallery" class="btn btn-secondary">图片画廊</a>
-            <a href="https://github.com/yourusername/randimg" class="btn btn-secondary" target="_blank">GitHub</a>
+            <a href="https://github.com/ltba/randimg" class="btn btn-secondary" target="_blank" rel="noopener">GitHub</a>
         </div>
 
         <div class="stats">
@@ -254,58 +254,12 @@ curl "<span id="demo-url-4"></span>/api/random?channel_id=YOUR_CHANNEL&output=js
         </div>
     </div>
 
-    <div class="refresh-bg" onclick="refreshBackground()" title="换一张背景">
+    <button class="refresh-bg" type="button" title="换一张背景">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
         </svg>
-    </div>
+    </button>
 
-    <script>
-        // 获取当前域名
-        const baseURL = window.location.origin;
-
-        // 填充所有示例URL中的域名
-        document.addEventListener('DOMContentLoaded', function() {
-            for (let i = 1; i <= 10; i++) {
-                const elem = document.getElementById(`demo-url-${i}`);
-                if (elem) elem.textContent = baseURL;
-            }
-        });
-
-        // 加载统计数据
-        async function loadStats() {
-            try {
-                const response = await fetch('/api/stats');
-                const data = await response.json();
-                document.getElementById('stat-images').textContent = data.total_images || 0;
-                document.getElementById('stat-calls').textContent = data.total_calls || 0;
-                document.getElementById('stat-today').textContent = data.today_calls || 0;
-            } catch (error) {
-                console.error('Failed to load stats:', error);
-            }
-        }
-
-        // 设置随机背景
-        function setRandomBackground() {
-            // 同源访问不需要API key
-            const bgUrl = '/api/random?category=acg&format=redirect';
-            document.getElementById('background').style.backgroundImage = `url('${bgUrl}')`;
-        }
-
-        // 刷新背景
-        function refreshBackground() {
-            const bg = document.getElementById('background');
-            bg.style.opacity = '0';
-            setTimeout(() => {
-                setRandomBackground();
-                bg.style.transition = 'opacity 0.5s';
-                bg.style.opacity = '1';
-            }, 500);
-        }
-
-        // 初始化
-        loadStats();
-        setRandomBackground();
-    </script>
+    <script type="module" src="/js/home.js"></script>
 </body>
 </html>

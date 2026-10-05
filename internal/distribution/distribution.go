@@ -85,7 +85,6 @@ func (h *Handler) RandomImage(c *gin.Context) {
 			"width":    img.Width,
 			"height":   img.Height,
 			"format":   img.Format,
-			"source":   img.Source,
 			"category": img.Category,
 		})
 	default:
@@ -119,7 +118,7 @@ func (h *Handler) ListImages(c *gin.Context) {
 		} else {
 			// slug 不存在: 过滤无命中, 返回空集.
 			c.JSON(http.StatusOK, gin.H{
-				"data": []store.Image{},
+				"data": []gin.H{},
 				"pagination": gin.H{
 					"page": page, "page_size": pageSize, "total": 0, "total_page": 0,
 				},
@@ -145,7 +144,7 @@ func (h *Handler) ListImages(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"data": images,
+		"data": publicImages(images),
 		"pagination": gin.H{
 			"page":       page,
 			"page_size":  pageSize,
@@ -153,6 +152,25 @@ func (h *Handler) ListImages(c *gin.Context) {
 			"total_page": (total + int64(pageSize) - 1) / int64(pageSize),
 		},
 	})
+}
+
+// publicImages 公开视图: 剔除 source 字段 (公开面不暴露来源信息).
+func publicImages(images []store.Image) []gin.H {
+	out := make([]gin.H, len(images))
+	for i := range images {
+		out[i] = gin.H{
+			"id":          images[i].ID,
+			"source_url":  images[i].SourceURL,
+			"width":       images[i].Width,
+			"height":      images[i].Height,
+			"format":      images[i].Format,
+			"status":      images[i].Status,
+			"category_id": images[i].CategoryID,
+			"category":    images[i].Category,
+			"created_at":  images[i].CreatedAt,
+		}
+	}
+	return out
 }
 
 // ListCategories GET /api/categories — 全量, 无分页.
