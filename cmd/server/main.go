@@ -81,6 +81,10 @@ func main() {
 	}
 
 	// 后台服务: 异步计量与元数据补全.
+	// 首次迁移: 明细表存量回填按日聚合 (仅聚合表为空时执行).
+	if err := store.BackfillDailyCalls(); err != nil {
+		log.Printf("[store] backfill daily calls failed: %v", err)
+	}
 	metrics.Start()
 	fetchService := metadata.NewMetadataFetchService(10)
 	fetchService.Start()

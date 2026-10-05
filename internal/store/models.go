@@ -54,6 +54,16 @@ type CallLog struct {
 
 func (CallLog) TableName() string { return "call_logs" }
 
+// DailyCall 按日调用聚合: 每天每 Channel 一行, channel_id = 0 为匿名桶.
+// 承载累计与当日统计口径, 与明细表 (call_logs) 的保留窗口解耦.
+type DailyCall struct {
+	Date      string `gorm:"primaryKey;type:varchar(10)" json:"date"` // UTC 日期 YYYY-MM-DD
+	ChannelID uint   `gorm:"primaryKey" json:"channel_id"`
+	Count     int64  `gorm:"not null;default:0" json:"count"`
+}
+
+func (DailyCall) TableName() string { return "daily_calls" }
+
 // Setting 运行时配置 kv 存储; 管理面可调项的唯一持久层.
 type Setting struct {
 	Key   string `gorm:"primaryKey;type:varchar(64)" json:"key"`

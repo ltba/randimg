@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // ErrNotFound 通用未命中.
@@ -52,32 +53,117 @@ func CountActiveChannels() (int64, error) {
 	return n, err
 }
 
-// CountCallsSince 自给定时间起的调用量; 口径仅 Channel 调用, 匿名不计入.
+// CountCallsSince 自给定时间起的 Channel 调用量; 口径: 按日聚合表, 匿名不计入.
 func CountCallsSince(since time.Time) (int64, error) {
 	var n int64
-	err := DB.Model(&CallLog{}).Where("channel_id IS NOT NULL AND created_at >= ?", since).Count(&n).Error
+	err := DB.Model(&DailyCall{}).
+		Where("channel_id > 0 AND date >= ?", since.UTC().Format("2006-01-02")).
+		Select("COALESCE(SUM(count), 0)").Scan(&n).Error
 	return n, err
 }
 
-// CountAllCalls 累计调用量; 口径仅 Channel 调用, 匿名不计入.
+// CountAllCalls 累计 Channel 调用量; 口径: 按日聚合表, 匿名不计入.
 func CountAllCalls() (int64, error) {
 	var n int64
-	err := DB.Model(&CallLog{}).Where("channel_id IS NOT NULL").Count(&n).Error
+	err := DB.Model(&DailyCall{}).
+		Where("channel_id > 0").
+		Select("COALESCE(SUM(count), 0)").Scan(&n).Error
 	return n, err
 }
 
 // CountAnonCallsSince 自给定时间起的匿名调用量; 与总计数口径分离, 单独计量.
 func CountAnonCallsSince(since time.Time) (int64, error) {
 	var n int64
-	err := DB.Model(&CallLog{}).Where("channel_id IS NULL AND created_at >= ?", since).Count(&n).Error
+	err := DB.Model(&DailyCall{}).
+		Where("channel_id = 0 AND date >= ?", since.UTC().Format("2006-01-02")).
+		Select("COALESCE(SUM(count), 0)").Scan(&n).Error
 	return n, err
 }
 
 // CountAnonAllCalls 累计匿名调用量; 与总计数口径分离, 单独计量.
 func CountAnonAllCalls() (int64, error) {
 	var n int64
-	err := DB.Model(&CallLog{}).Where("channel_id IS NULL").Count(&n).Error
+	err := DB.Model(&DailyCall{}).
+		Where("channel_id = 0").
+		Select("COALESCE(SUM(count), 0)").Scan(&n).Error
 	return n, err
+}
+
+// DailyCallDelta 单次批量落库的按日聚合增量.
+type DailyCallDelta struct {
+	Date      string
+	ChannelID uint
+	N         int64
+}
+
+// FlushCallLogs 单事务写入调用明细, 累加按日聚合, 并回写涉及 Channel 的 last_used_at; 计量落库唯一入口.
+func FlushCallLogs(logs []CallLog, deltas []DailyCallDelta) error {
+	if len(logs) == 0 && len(deltas) == 0 {
+		return nil
+	}
+	return DB.Transaction(func(tx *gorm.DB) error {
+		if len(logs) > 0 {
+			if err := tx.Create(&logs).Error; err != nil {
+				return err
+			}
+		}
+		for _, d := range deltas {
+			if err := tx.Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "date"}, {Name: "channel_id"}},
+				DoUpdates: clause.Assignments(map[string]interface{}{"count": gorm.Expr("count + ?", d.N)}),
+			}).Create(&DailyCall{Date: d.Date, ChannelID: d.ChannelID, Count: d.N}).Error; err != nil {
+				return err
+			}
+		}
+		last := make(map[uint]time.Time)
+		for _, l := range logs {
+			if l.ChannelID != nil && l.CreatedAt.After(last[*l.ChannelID]) {
+				last[*l.ChannelID] = l.CreatedAt
+			}
+		}
+		for id, at := range last {
+			if err := tx.Model(&Channel{}).Where("id = ?", id).Update("last_used_at", at).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+// BackfillDailyCalls 首次迁移: call_logs 全量聚合回填 daily_calls (仅当聚合表为空).
+func BackfillDailyCalls() error {
+	var n int64
+	if err := DB.Model(&DailyCall{}).Count(&n).Error; err != nil {
+		return err
+	}
+	if n > 0 {
+		return nil
+	}
+	type aggRow struct {
+		Date      string
+		ChannelID uint
+		Count     int64
+	}
+	var rows []aggRow
+	if err := DB.Model(&CallLog{}).
+		Select("strftime('%Y-%m-%d', created_at) AS date, COALESCE(channel_id, 0) AS channel_id, COUNT(*) AS count").
+		Group("date, channel_id").Scan(&rows).Error; err != nil {
+		return err
+	}
+	if len(rows) == 0 {
+		return nil
+	}
+	batch := make([]DailyCall, len(rows))
+	for i, r := range rows {
+		batch[i] = DailyCall{Date: r.Date, ChannelID: r.ChannelID, Count: r.Count}
+	}
+	return DB.CreateInBatches(&batch, 100).Error
+}
+
+// DeleteCallLogsBefore 删除指定时间前的调用明细, 返回删除行数.
+func DeleteCallLogsBefore(t time.Time) (int64, error) {
+	res := DB.Where("created_at < ?", t).Delete(&CallLog{})
+	return res.RowsAffected, res.Error
 }
 
 // ListCallLogs 按 Channel 与时间区间查询调用日志; channelID 必填, 区间可选, 时间口径 UTC.
@@ -98,30 +184,6 @@ func ListCallLogs(channelID uint, start, end *time.Time) ([]CallLog, int64, erro
 		return nil, 0, err
 	}
 	return logs, total, nil
-}
-
-// BatchInsertCallLogs 单事务批量写入调用日志并回写涉及 Channel 的 last_used_at.
-func BatchInsertCallLogs(logs []CallLog) error {
-	if len(logs) == 0 {
-		return nil
-	}
-	return DB.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(&logs).Error; err != nil {
-			return err
-		}
-		last := make(map[uint]time.Time)
-		for _, l := range logs {
-			if l.ChannelID != nil && l.CreatedAt.After(last[*l.ChannelID]) {
-				last[*l.ChannelID] = l.CreatedAt
-			}
-		}
-		for id, at := range last {
-			if err := tx.Model(&Channel{}).Where("id = ?", id).Update("last_used_at", at).Error; err != nil {
-				return err
-			}
-		}
-		return nil
-	})
 }
 
 // IsUniqueViolation 判断是否唯一约束冲突 (source_url, name/slug, channel_id).

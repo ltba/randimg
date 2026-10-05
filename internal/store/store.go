@@ -40,5 +40,6 @@ func AutoMigrate() error {
 		&Channel{},
 		&CallLog{},
 		&Setting{},
+		&DailyCall{},
 	)
 }
