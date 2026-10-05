@@ -1,14 +1,9 @@
-name: Docker Release
+name: Release
 
 on:
   push:
-    branches:
-      - main
     tags:
       - 'v*'
-    paths-ignore:
-      - '**.md'
-      - 'LICENSE'
   workflow_dispatch:
 
 env:
@@ -16,7 +11,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # 构建门禁: 发布前 go build + vet 必须通过.
+  # 发布门禁: 打了 tag 也要先过 build + vet, 坏提交发不出镜像.
   build:
     runs-on: ubuntu-latest
     steps:
@@ -60,7 +55,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=sha-
