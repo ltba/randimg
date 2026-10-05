@@ -126,12 +126,11 @@ func adminToken() string {
 	return "admin_secret_token"
 }
 
-// RateLimitMiddleware Channel 窗口 + 匿名桶; anonLimit 为匿名桶阈值 (60 秒窗口).
-func RateLimitMiddleware(anonLimit int) gin.HandlerFunc {
-	anon := newWindow(anonLimit)
+// RateLimitMiddleware Channel 窗口 + 匿名桶 (全局单例, 阈值管理面可调).
+func RateLimitMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var w *window
-		limit := anonLimit
+		limit := 0
 
 		if v, ok := c.Get("channel"); ok && v != nil {
 			ch, ok := v.(*store.Channel)
@@ -142,7 +141,8 @@ func RateLimitMiddleware(anonLimit int) gin.HandlerFunc {
 			w = registry().get("channel:"+strconv.FormatUint(uint64(ch.ID), 10), ch.RateLimit)
 			limit = ch.RateLimit
 		} else {
-			w = anon
+			w = anonBucket
+			limit = w.currentLimit()
 		}
 
 		if !w.allow() {
@@ -159,4 +159,48 @@ func RateLimitMiddleware(anonLimit int) gin.HandlerFunc {
 		c.Header("X-RateLimit-Remaining", strconv.Itoa(w.remaining()))
 		c.Next()
 	}
+}
+
+// settingAnonRateLimit 匿名桶阈值的持久化 key.
+const settingAnonRateLimit = "anon_rate_limit"
+
+// LoadAnonLimit 启动时加载匿名桶阈值: DB 配置优先, 缺失时用 fallback 并固化写回.
+func LoadAnonLimit(fallback int) {
+	v, err := store.GetSettingValue(settingAnonRateLimit)
+	if err != nil {
+		log.Printf("[access] load anon rate limit failed, fallback %d: %v", fallback, err)
+		InitAnonLimit(fallback)
+		return
+	}
+	if n, err := strconv.Atoi(v); err == nil && n >= 1 {
+		InitAnonLimit(n)
+		return
+	}
+	InitAnonLimit(fallback)
+	if err := store.SetSettingValue(settingAnonRateLimit, strconv.Itoa(fallback)); err != nil {
+		log.Printf("[access] persist anon rate limit failed: %v", err)
+	}
+}
+
+// AnonSettings GET /api/admin/settings/anon — 读匿名桶阈值.
+func AnonSettings(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"anon_rate_limit": AnonLimit()})
+}
+
+// UpdateAnonSettings PUT /api/admin/settings/anon — 调匿名桶阈值, 立即生效并持久化.
+func UpdateAnonSettings(c *gin.Context) {
+	var input struct {
+		AnonRateLimit *int `json:"anon_rate_limit" binding:"required,min=1,max=100000"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	n := *input.AnonRateLimit
+	if err := store.SetSettingValue(settingAnonRateLimit, strconv.Itoa(n)); err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to save setting"})
+		return
+	}
+	InitAnonLimit(n)
+	c.JSON(http.StatusOK, gin.H{"anon_rate_limit": n})
 }

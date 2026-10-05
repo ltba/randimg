@@ -85,13 +85,14 @@ func main() {
 	fetchService := metadata.NewMetadataFetchService(10)
 	fetchService.Start()
 
-	// 匿名桶阈值, 默认 300 次/分钟.
+	// 匿名桶阈值: DB 配置优先, ANON_RATE_LIMIT env 为缺省回退 (默认 300).
 	anonLimit := 300
 	if v := os.Getenv("ANON_RATE_LIMIT"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil && n >= 1 {
 			anonLimit = n
 		}
 	}
+	access.LoadAnonLimit(anonLimit)
 
 	dist := distribution.NewHandler()
 	proxy := imageproxy.NewHandler()
@@ -108,7 +109,7 @@ func main() {
 	// 公开面: Channel 校验与计量 → 限流 (Channel 窗口 + 匿名桶).
 	apiGroup := r.Group("/api")
 	apiGroup.Use(access.AccessMiddleware())
-	apiGroup.Use(access.RateLimitMiddleware(anonLimit))
+	apiGroup.Use(access.RateLimitMiddleware())
 	{
 		apiGroup.GET("/random", dist.RandomImage)
 		apiGroup.GET("/proxy/:id", proxy.ProxyImage)
@@ -118,7 +119,7 @@ func main() {
 
 	// 公开统计: 自身不计量, 受匿名桶兜底限流.
 	statsGroup := r.Group("/api")
-	statsGroup.Use(access.RateLimitMiddleware(anonLimit))
+	statsGroup.Use(access.RateLimitMiddleware())
 	statsGroup.GET("/stats", stats.PublicStats)
 
 	// 管理面: Bearer 认证, 无 CORS 头.
@@ -147,6 +148,9 @@ func main() {
 
 		adminGroup.GET("/stats", stats.AdminStats)
 		adminGroup.GET("/stats/overview", stats.OverviewStats)
+
+		adminGroup.GET("/settings/anon", access.AnonSettings)
+		adminGroup.PUT("/settings/anon", access.UpdateAnonSettings)
 
 		adminGroup.POST("/import/github", ghimp.ImportFromGitHub)
 		adminGroup.POST("/import/github/preview", ghimp.PreviewImport)

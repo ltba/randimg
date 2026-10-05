@@ -53,8 +53,7 @@ function submit() {
   position: fixed;
   inset: 0;
   z-index: 3000;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(4px);
+  background: #0f172a;
   display: flex;
   align-items: center;
   justify-content: center;

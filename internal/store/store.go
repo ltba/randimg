@@ -39,5 +39,6 @@ func AutoMigrate() error {
 		&Image{},
 		&Channel{},
 		&CallLog{},
+		&Setting{},
 	)
 }

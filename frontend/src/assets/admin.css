@@ -281,6 +281,23 @@ details.advanced summary {
 
 details.advanced[open] summary { margin-bottom: 12px; }
 
+/* 匿名限流设置行 */
+.anon-limit {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.anon-limit label {
+    font-size: 13px;
+    color: var(--text-2);
+}
+
+.anon-limit input {
+    width: 120px;
+}
+
 /* 窄屏: sidebar 折叠为顶栏 */
 @media (max-width: 900px) {
     .layout { flex-direction: column; }

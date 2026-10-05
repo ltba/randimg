@@ -1,5 +1,5 @@
 <template>
-  <div class="layout">
+  <div v-if="token" class="layout">
     <div class="bg-layer" :style="bgStyle"></div>
     <div v-if="bgEnabled" class="bg-overlay"></div>
 
@@ -70,16 +70,16 @@
       </div>
     </main>
 
-    <TokenGate />
     <ToastHost />
     <ConfirmHost />
   </div>
+  <TokenGate v-else />
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import type { Category, OverviewStats } from '../shared/types';
-import { adminRequest } from '../shared/api';
+import { adminRequest, useAdminToken } from '../shared/api';
 import ImagesView from './views/ImagesView.vue';
 import CategoriesView from './views/CategoriesView.vue';
 import ChannelsView from './views/ChannelsView.vue';
@@ -103,6 +103,9 @@ const sections = [
 ] as const;
 
 type SectionKey = (typeof sections)[number]['key'];
+
+// 未持 token 时只渲染登录卡片, 不渲染后台骨架.
+const token = useAdminToken();
 
 const current = ref<SectionKey>('images');
 const categories = ref<Category[]>([]);

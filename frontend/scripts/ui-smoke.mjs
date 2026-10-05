@@ -28,6 +28,8 @@ globalThis.localStorage = {
 
 const js = process.argv[2];
 const page = process.argv[3] || 'admin';
+// admin 骨架仅在持 token 时渲染; 预置 token 再挂载.
+if (page === 'admin') store.set('admin_token', 'smoke-token');
 await import(js);
 
 // Vue mount 同步; 等微任务清空.
@@ -39,7 +41,7 @@ const checksByPage = {
     ['sidebar 品牌', html.includes('Rand') && html.includes('Img')],
     ['五个导航项', ['图片管理', '分类管理', 'Channels', '统计数据', '导入'].every(t => html.includes(t))],
     ['统计卡', html.includes('总图片数') && html.includes('今日调用')],
-    ['TokenGate (无 token 应显示)', html.includes('请输入管理员 Token')],
+    ['登录卡片不显示 (已持 token)', !html.includes('请输入管理员 Token')],
     ['背景开关按钮', html.includes('bg-toggle')],
   ],
   gallery: [

@@ -128,3 +128,21 @@ func BatchInsertCallLogs(logs []CallLog) error {
 func IsUniqueViolation(err error) bool {
 	return err != nil && errors.Is(err, gorm.ErrDuplicatedKey)
 }
+
+// GetSettingValue 读配置值; 无记录返回空串.
+func GetSettingValue(key string) (string, error) {
+	var s Setting
+	err := DB.Where("key = ?", key).First(&s).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return s.Value, nil
+}
+
+// SetSettingValue 写配置值 (upsert).
+func SetSettingValue(key, value string) error {
+	return DB.Save(&Setting{Key: key, Value: value}).Error
+}

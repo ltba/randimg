@@ -7,6 +7,15 @@ import (
 
 const windowSpan = time.Minute
 
+// anonBucket 匿名桶全局单例: 全部匿名调用共享 (与术语表一致), 阈值管理面可调.
+var anonBucket = newWindow(300)
+
+// InitAnonLimit 设置匿名桶阈值 (立即生效).
+func InitAnonLimit(n int) { anonBucket.setLimit(n) }
+
+// AnonLimit 返回匿名桶当前阈值.
+func AnonLimit() int { return anonBucket.currentLimit() }
+
 // window 滑动窗口限流器.
 type window struct {
 	mu       sync.Mutex
@@ -40,6 +49,23 @@ func (w *window) allow() bool {
 	}
 	w.requests = append(w.requests, now)
 	return true
+}
+
+// setLimit 更新窗口阈值; 运行时可调.
+func (w *window) setLimit(n int) {
+	if n < 1 {
+		n = 1
+	}
+	w.mu.Lock()
+	w.limit = n
+	w.mu.Unlock()
+}
+
+// currentLimit 读窗口当前阈值.
+func (w *window) currentLimit() int {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	return w.limit
 }
 
 func (w *window) remaining() int {

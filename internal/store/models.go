@@ -53,3 +53,11 @@ type CallLog struct {
 }
 
 func (CallLog) TableName() string { return "call_logs" }
+
+// Setting 运行时配置 kv 存储; 管理面可调项的唯一持久层.
+type Setting struct {
+	Key   string `gorm:"primaryKey;type:varchar(64)" json:"key"`
+	Value string `gorm:"type:varchar(255);not null" json:"value"`
+}
+
+func (Setting) TableName() string { return "settings" }
