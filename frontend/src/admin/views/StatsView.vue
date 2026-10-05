@@ -47,14 +47,18 @@ const logs = ref<StatsResponse['logs']>([]);
 const total = ref(0);
 const showTable = ref(false);
 
-onMounted(async () => {
+async function reload() {
   try {
     const data = await adminRequest<ChannelListResponse>('/channels');
     channels.value = data.data || [];
   } catch (error) {
     toast('加载Channels失败: ' + (error as Error).message, 'error');
   }
-});
+}
+
+onMounted(reload);
+
+defineExpose({ reload });
 
 async function loadLogs() {
   if (!channelId.value) {

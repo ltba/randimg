@@ -48,7 +48,7 @@ func (h *Handler) RandomImage(c *gin.Context) {
 	if category != "" {
 		var cat store.Category
 		if err := store.DB.Where("slug = ?", category).First(&cat).Error; err != nil {
-			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "Category not found"})
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "Category not found, 请使用分类 slug (如 ?category=acg)"})
 			return
 		}
 		q = q.Where("category_id = ?", cat.ID)

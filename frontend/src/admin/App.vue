@@ -57,12 +57,13 @@
       <div class="content">
         <ImagesView
           v-show="current === 'images'"
+          ref="imagesRef"
           :categories="categories"
           @changed="refreshAll"
         />
-        <CategoriesView v-show="current === 'categories'" @updated="loadCategories" />
-        <ChannelsView v-show="current === 'channels'" @changed="refreshAll" />
-        <StatsView v-show="current === 'stats'" />
+        <CategoriesView v-show="current === 'categories'" ref="categoriesRef" @updated="loadCategories" />
+        <ChannelsView v-show="current === 'channels'" ref="channelsRef" @changed="refreshAll" />
+        <StatsView v-show="current === 'stats'" ref="statsRef" />
         <ImportView v-show="current === 'import'" :categories="categories" @changed="refreshAll" />
       </div>
     </main>
@@ -86,6 +87,11 @@ import TokenGate from './components/TokenGate.vue';
 import ToastHost from './components/ToastHost.vue';
 import ConfirmHost from './components/ConfirmHost.vue';
 
+const imagesRef = ref<InstanceType<typeof ImagesView> | null>(null);
+const categoriesRef = ref<InstanceType<typeof CategoriesView> | null>(null);
+const channelsRef = ref<InstanceType<typeof ChannelsView> | null>(null);
+const statsRef = ref<InstanceType<typeof StatsView> | null>(null);
+
 const sections = [
   { key: 'images', label: '图片管理' },
   { key: 'categories', label: '分类管理' },
@@ -105,6 +111,10 @@ const fromHash = location.hash.replace('#', '') as SectionKey;
 if (sections.some(s => s.key === fromHash)) current.value = fromHash;
 watch(current, v => {
   history.replaceState(null, '', `#${v}`);
+  // 切换视图时重拉该域数据: 导入后切回图片管理即可见最新状态 (含补全进度).
+  const refs = { images: imagesRef, categories: categoriesRef, channels: channelsRef, stats: statsRef } as const;
+  // import 视图数据由 App 的 categories 驱动, 无需重拉.
+  refs[v]?.value?.reload?.();
 });
 
 // 随机图背景: 开关记 localStorage, 换一张换 seed.

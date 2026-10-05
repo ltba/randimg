@@ -99,7 +99,9 @@ const editor = reactive({
   status: 'active',
 });
 
-onMounted(() => load());
+onMounted(load);
+
+defineExpose({ reload: load });
 
 async function load() {
   try {

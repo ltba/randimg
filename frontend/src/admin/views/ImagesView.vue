@@ -25,6 +25,7 @@
           <option value="">全部图片</option>
           <option value="true">补全失败</option>
         </select>
+        <button class="btn btn-secondary" @click="fetchMissing">补全缺失元数据</button>
         <button class="btn btn-primary" @click="openEditor(null)">添加图片</button>
       </div>
     </div>
@@ -366,6 +367,19 @@ async function batchDelete() {
 }
 
 defineExpose({ reload });
+
+async function fetchMissing() {
+  if (!(await confirmModal('对全部缺失元数据的图片重新发起补全？'))) return;
+  try {
+    const result = await adminRequest<{ queued: number }>('/images/auto-fetch', {
+      method: 'POST',
+      body: JSON.stringify({ all: true }),
+    });
+    toast(`已入队 ${result.queued} 张补全任务`);
+  } catch (error) {
+    toast('触发补全失败: ' + (error as Error).message, 'error');
+  }
+}
 </script>
 
 <style scoped>

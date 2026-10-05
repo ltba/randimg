@@ -73,7 +73,9 @@ const editorOpen = ref(false);
 const editorId = ref<number | null>(null);
 const editor = reactive({ name: '', slug: '', description: '' });
 
-onMounted(() => load());
+onMounted(load);
+
+defineExpose({ reload: load });
 
 async function load() {
   try {
