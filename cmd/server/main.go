@@ -16,6 +16,7 @@ import (
 	"randimg/internal/access"
 	"randimg/internal/channel"
 	"randimg/internal/distribution"
+	"randimg/internal/ghimport"
 	"randimg/internal/imageproxy"
 	"randimg/internal/library"
 	"randimg/internal/metadata"
@@ -96,6 +97,7 @@ func main() {
 	lib := library.NewHandler(fetchService)
 	channels := channel.NewHandler()
 	stats := metrics.NewHandler()
+	ghimp := ghimport.NewHandler(fetchService)
 
 	r := gin.Default()
 
@@ -144,6 +146,8 @@ func main() {
 
 		adminGroup.GET("/stats", stats.AdminStats)
 		adminGroup.GET("/stats/overview", stats.OverviewStats)
+
+		adminGroup.POST("/import/github", ghimp.ImportFromGitHub)
 	}
 
 	// 静态页面: 资源落点 static/.
