@@ -112,9 +112,14 @@ if (sections.some(s => s.key === fromHash)) current.value = fromHash;
 watch(current, v => {
   history.replaceState(null, '', `#${v}`);
   // 切换视图时重拉该域数据: 导入后切回图片管理即可见最新状态 (含补全进度).
-  const refs = { images: imagesRef, categories: categoriesRef, channels: channelsRef, stats: statsRef } as const;
+  const refs: Partial<Record<SectionKey, { reload?: () => void } | null>> = {
+    images: imagesRef.value,
+    categories: categoriesRef.value,
+    channels: channelsRef.value,
+    stats: statsRef.value,
+  };
   // import 视图数据由 App 的 categories 驱动, 无需重拉.
-  refs[v]?.value?.reload?.();
+  refs[v]?.reload?.();
 });
 
 // 随机图背景: 开关记 localStorage, 换一张换 seed.
