@@ -42,6 +42,7 @@
               <tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr>
               <tr><td><code>category</code></td><td>string</td><td>否</td><td>分类slug（如：acg、wallpaper）</td></tr>
               <tr><td><code>device</code></td><td>string</td><td>否</td><td>设备类型：<code>pc</code>（横屏）或 <code>mobile</code>（竖屏）<br><strong>不指定时自动从User-Agent识别，默认pc</strong></td></tr>
+              <tr><td><code>min_width</code> / <code>max_width</code> / <code>min_height</code> / <code>max_height</code></td><td>int</td><td>否</td><td>尺寸范围过滤：正整数， 可任意组合， 与 device 叠加； 如 <code>?min_width=1920</code></td></tr>
               <tr><td><code>output</code></td><td>string</td><td>否</td><td>响应模式：<code>redirect</code>（默认，302重定向）、<code>json</code>（JSON数据）、<code>proxy</code>（代理图片）</td></tr>
               <tr><td><code>compress</code></td><td>boolean</td><td>否</td><td>是否压缩图片（仅proxy模式有效）：<code>true</code> 或 <code>false</code>（默认）</td></tr>
               <tr><td><code>channel_id</code></td><td>string</td><td>否</td><td>接入渠道标识：用于计量与独立限流（可在管理后台创建；不携带则计入匿名统计（不计入总调用），受全局兜底限流）</td></tr>

@@ -62,6 +62,23 @@ func (h *Handler) RandomImage(c *gin.Context) {
 		q = q.Where("width IS NOT NULL AND height IS NOT NULL AND height >= width")
 	}
 
+	// 尺寸过滤: 正整数范围, 可任意组合, 与分类/设备类型叠加.
+	for param, cond := range map[string]string{
+		"min_width": "width >= ?", "max_width": "width <= ?",
+		"min_height": "height >= ?", "max_height": "height <= ?",
+	} {
+		v := c.Query(param)
+		if v == "" {
+			continue
+		}
+		n, err := strconv.Atoi(v)
+		if err != nil || n < 1 {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid " + param + " (positive integer required)"})
+			return
+		}
+		q = q.Where(cond, n)
+	}
+
 	var img store.Image
 	if err := q.Preload("Category").Order("RANDOM()").First(&img).Error; err != nil {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "No images found"})
