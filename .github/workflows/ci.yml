@@ -54,3 +54,19 @@ jobs:
         run: |
           go build ./...
           go vet ./...
+
+  delete-runs:
+    needs: [frontend, build]
+    if: github.event_name == 'push' # PR (尤其 fork) 的 token 无 actions 写权限
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 0
+          keep_minimum_runs: 3
