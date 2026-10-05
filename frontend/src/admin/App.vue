@@ -224,10 +224,4 @@ onMounted(refreshAll);
 .bg-toggle.off {
   opacity: 0.6;
 }
-
-/* 背景开启时提高卡片不透明度保证可读. */
-:global(body.has-bg .content),
-:global(body.has-bg .stat-card) {
-  background: rgba(255, 255, 255, 0.95);
-}
 </style>

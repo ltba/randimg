@@ -87,6 +87,57 @@ input[type='checkbox']:disabled {
   cursor: not-allowed;
 }
 
+/* Radio 自绘: 与 checkbox 同风格, 选中为实心内圆 */
+input[type='radio'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  cursor: pointer;
+  vertical-align: middle;
+  position: relative;
+  flex-shrink: 0;
+  transition: border-color 0.12s;
+}
+
+input[type='radio']:hover {
+  border-color: var(--primary);
+}
+
+input[type='radio']:checked {
+  border-color: var(--primary);
+}
+
+input[type='radio']:checked::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+input[type='radio']:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* 单选行: 选项间留距, 文字与控件对齐 */
+.radio-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.radio-row label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
 /* Buttons */
 .btn {
     display: inline-block;
@@ -136,7 +187,7 @@ th {
     background: transparent;
 }
 
-tbody tr:hover { background: #f8fafc; }
+tbody tr:hover { background: var(--bg); }
 
 /* Pill 徽章 */
 .pill {

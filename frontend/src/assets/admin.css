@@ -251,8 +251,17 @@
 
 .sample-list li:hover { background: var(--surface); }
 
-.check-ok { color: var(--ok-text); }
-.check-fail { color: #991b1b; }
+.check-ok {
+    color: var(--ok-text);
+    font-size: 13px;
+    word-break: break-all;
+}
+
+.check-fail {
+    color: var(--danger-h);
+    font-size: 13px;
+    word-break: break-all;
+}
 
 /* 高级选项折叠 */
 details.advanced {
@@ -306,4 +315,26 @@ details.advanced[open] summary { margin-bottom: 12px; }
         margin-left: 0;
         padding: 16px;
     }
+}
+
+/* 背景图开启时: 面板半透明毛玻璃, 透出背景图 */
+body.has-bg .sidebar {
+    background: rgba(15, 23, 42, 0.82);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+body.has-bg .content,
+body.has-bg .stat-card {
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+body.has-bg details.advanced {
+    background: rgba(255, 255, 255, 0.55);
+}
+
+body.has-bg .preview-panel {
+    background: rgba(241, 245, 249, 0.55);
 }
