@@ -39,7 +39,8 @@ func CORSMiddleware() gin.HandlerFunc {
 }
 
 // AccessMiddleware Channel 校验与计量: channel_id 仅取 query 参数;
-// 不存在 404, 非 active 403; 来源绑定严格模式; 通过后非阻塞提交计量.
+// 不存在 404, 非 active 403; 来源绑定严格模式; 匿名与 Channel 调用均非阻塞提交计量,
+// 总计数口径 (仅 Channel) 由统计查询层保证.
 func AccessMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Query("channel_id")

@@ -17,6 +17,7 @@ type Handler struct{}
 func NewHandler() *Handler { return &Handler{} }
 
 // PublicStats GET /api/stats — 公开统计; 自身不计量.
+// 口径: 总计数仅 Channel 调用; 匿名单独计量不计入总数.
 func (h *Handler) PublicStats(c *gin.Context) {
 	totalImages, err := store.CountActiveImages()
 	if err != nil {
@@ -74,9 +75,9 @@ func (h *Handler) AdminStats(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"logs": logs, "total": total})
 }
 
-// OverviewStats GET /api/admin/stats/overview — 全局概览, 口径含匿名调用.
+// OverviewStats GET /api/admin/stats/overview — 全局概览; 总计数仅 Channel 调用, 匿名单独计量.
 func (h *Handler) OverviewStats(c *gin.Context) {
-	activeImages, err := store.CountActiveImages()
+	totalImages, err := store.CountActiveImages()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load stats"})
 		return
@@ -96,11 +97,23 @@ func (h *Handler) OverviewStats(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load stats"})
 		return
 	}
+	todayAnonCalls, err := store.CountAnonCallsSince(UTCDayStart())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load stats"})
+		return
+	}
+	totalAnonCalls, err := store.CountAnonAllCalls()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load stats"})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{
-		"active_images":   activeImages,
+		"total_images":    totalImages,
 		"active_channels": activeChannels,
-		"today_calls":     todayCalls,
-		"total_calls":     totalCalls,
+		"today_calls":      todayCalls,
+		"total_calls":      totalCalls,
+		"today_anon_calls": todayAnonCalls,
+		"total_anon_calls": totalAnonCalls,
 	})
 }
 

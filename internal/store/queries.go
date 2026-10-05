@@ -52,17 +52,31 @@ func CountActiveChannels() (int64, error) {
 	return n, err
 }
 
-// CountCallsSince 自给定时间起的调用量.
+// CountCallsSince 自给定时间起的调用量; 口径仅 Channel 调用, 匿名不计入.
 func CountCallsSince(since time.Time) (int64, error) {
 	var n int64
-	err := DB.Model(&CallLog{}).Where("created_at >= ?", since).Count(&n).Error
+	err := DB.Model(&CallLog{}).Where("channel_id IS NOT NULL AND created_at >= ?", since).Count(&n).Error
 	return n, err
 }
 
-// CountAllCalls 累计调用量.
+// CountAllCalls 累计调用量; 口径仅 Channel 调用, 匿名不计入.
 func CountAllCalls() (int64, error) {
 	var n int64
-	err := DB.Model(&CallLog{}).Count(&n).Error
+	err := DB.Model(&CallLog{}).Where("channel_id IS NOT NULL").Count(&n).Error
+	return n, err
+}
+
+// CountAnonCallsSince 自给定时间起的匿名调用量; 与总计数口径分离, 单独计量.
+func CountAnonCallsSince(since time.Time) (int64, error) {
+	var n int64
+	err := DB.Model(&CallLog{}).Where("channel_id IS NULL AND created_at >= ?", since).Count(&n).Error
+	return n, err
+}
+
+// CountAnonAllCalls 累计匿名调用量; 与总计数口径分离, 单独计量.
+func CountAnonAllCalls() (int64, error) {
+	var n int64
+	err := DB.Model(&CallLog{}).Where("channel_id IS NULL").Count(&n).Error
 	return n, err
 }
 

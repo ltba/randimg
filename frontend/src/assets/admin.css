@@ -131,6 +131,13 @@
     margin-top: 4px;
 }
 
+.stat-card .stat-sub {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-2);
+    margin-top: 0;
+}
+
 /* 表格行内元素 */
 .thumb {
     max-width: 56px;

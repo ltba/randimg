@@ -52,6 +52,8 @@ export interface OverviewStats {
   active_channels: number;
   today_calls: number;
   total_calls: number;
+  today_anon_calls: number;
+  total_anon_calls: number;
 }
 
 export interface StatLog {

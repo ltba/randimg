@@ -47,10 +47,12 @@
         <div class="stat-card">
           <h3>今日调用</h3>
           <p class="num">{{ overview?.today_calls ?? '-' }}</p>
+          <p v-if="overview" class="stat-sub">匿名 {{ overview.today_anon_calls }}</p>
         </div>
         <div class="stat-card">
           <h3>总调用次数</h3>
           <p class="num">{{ overview?.total_calls ?? '-' }}</p>
+          <p v-if="overview" class="stat-sub">匿名 {{ overview.total_anon_calls }}</p>
         </div>
       </div>
 
@@ -127,9 +129,9 @@ const bgEnabled = ref(localStorage.getItem('admin_bg') !== 'off');
 const bgSeed = ref(Date.now());
 
 const bgStyle = computed(() => ({
-  // 背景调用归属专用渠道 admin-bg, 统计可与真实流量分离; 渠道不存在时退化为匿名计量.
+  // 背景匿名调用: 不计量 (统计仅计 Channel), 受匿名桶兜底限流.
   backgroundImage: bgEnabled.value
-    ? `url('/api/random?category=acg&channel_id=admin-bg&t=${bgSeed.value}')`
+    ? `url('/api/random?category=acg&t=${bgSeed.value}')`
     : 'none',
 }));
 
