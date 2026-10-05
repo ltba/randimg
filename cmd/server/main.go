@@ -168,7 +168,7 @@ func main() {
 	r.Static("/css", "./static/css")
 	r.Static("/js", "./static/js")
 	r.GET("/", func(c *gin.Context) { c.File("./static/home.html") })
-	r.GET("/gallery", func(c *gin.Context) { c.File("./static/gallery.html") })
+	r.GET("/gallery", func(c *gin.Context) { c.File("./frontend/dist/gallery.html") })
 
 	// 优雅关闭.
 	go func() {
