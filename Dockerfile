@@ -1,15 +1,23 @@
-# Build stage — CGO_ENABLED=0: glebarez/sqlite 为 pure Go 驱动, 产物静态链接.
-FROM golang:1.23-alpine AS builder
+# Build stage — 固定在构建机原生平台, Go 交叉编译产出目标架构二进制 (CGO=0), 不经 QEMU.
+FROM --platform=$BUILDPLATFORM golang:1.23-alpine AS builder
+
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
+ARG VERSION=dev
 
 WORKDIR /build
 
 COPY go.mod go.sum ./
-RUN go mod download
+# mod 与 build cache 跨构建持久 (buildkit cache mount), 版本注入不再使编译全量重跑.
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
 
 COPY . .
 
-ARG VERSION=dev
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w -X main.version=${VERSION}" -o randimg ./cmd/server
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
+    go build -ldflags="-s -w -X main.version=${VERSION}" -o randimg ./cmd/server
 
 # Runtime stage — distroless/static 自带 CA 证书 (出站 https 拉图源), nonroot 以 UID 65532 运行.
 FROM gcr.io/distroless/static-debian12:nonroot
