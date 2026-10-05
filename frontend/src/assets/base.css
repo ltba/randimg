@@ -45,6 +45,48 @@ code, .mono { font-family: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Cons
 
 .num { font-variant-numeric: tabular-nums; }
 
+/* Checkbox 自绘: 与 token 对齐, 替代浏览器默认样式 */
+input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  cursor: pointer;
+  vertical-align: middle;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+input[type='checkbox']:hover {
+  border-color: var(--primary);
+}
+
+input[type='checkbox']:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1.5px;
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+input[type='checkbox']:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 /* Buttons */
 .btn {
     display: inline-block;
