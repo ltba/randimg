@@ -19,7 +19,6 @@
           <option value="">全部状态</option>
           <option value="active">激活</option>
           <option value="inactive">下线</option>
-          <option value="deleted">删除</option>
         </select>
         <select v-model="fetchFilter" @change="reload">
           <option value="">全部图片</option>
@@ -158,7 +157,6 @@
             <option value="">不修改</option>
             <option value="active">激活</option>
             <option value="inactive">暂时下线</option>
-            <option value="deleted">已删除</option>
           </select>
         </div>
         <div class="form-group">
