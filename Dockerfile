@@ -30,7 +30,7 @@ COPY --from=builder /build/randimg .
 COPY --from=builder /build/.env.example .env
 
 # Copy static files
-COPY --from=builder /build/web/dist ./web/dist
+COPY --from=builder /build/static ./static
 
 # Create data directory for SQLite database
 RUN mkdir -p /app/data

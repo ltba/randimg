@@ -68,10 +68,10 @@
                                 <strong>不指定时自动从User-Agent识别，默认pc</strong></td>
                         </tr>
                         <tr>
-                            <td><code>format</code></td>
+                            <td><code>output</code></td>
                             <td>string</td>
                             <td>否</td>
-                            <td>返回格式：<code>redirect</code>（默认，302重定向）、<code>json</code>（JSON数据）、<code>proxy</code>（代理图片）</td>
+                            <td>响应模式：<code>redirect</code>（默认，302重定向）、<code>json</code>（JSON数据）、<code>proxy</code>（代理图片）</td>
                         </tr>
                         <tr>
                             <td><code>compress</code></td>
@@ -80,10 +80,10 @@
                             <td>是否压缩图片（仅proxy模式有效）：<code>true</code> 或 <code>false</code>（默认）</td>
                         </tr>
                         <tr>
-                            <td><code>api_key</code></td>
+                            <td><code>channel_id</code></td>
                             <td>string</td>
-                            <td>跨域必填</td>
-                            <td>API密钥（同源访问无需提供）</td>
+                            <td>否</td>
+                            <td>接入渠道标识：用于计量与独立限流（可在管理后台创建；不携带则计入匿名，受全局兑底限流）</td>
                         </tr>
                     </table>
                 </div>
@@ -96,10 +96,10 @@
 &lt;img src="<span id="demo-url-2"></span>/api/random?category=acg&device=mobile"&gt;
 
 # 获取JSON数据
-curl "<span id="demo-url-3"></span>/api/random?format=json"
+curl "<span id="demo-url-3"></span>/api/random?output=json"
 
-# 跨域调用（需要API Key）
-curl "<span id="demo-url-4"></span>/api/random?api_key=YOUR_KEY&format=json"</pre>
+# 携带Channel（计量与独立限流）
+curl "<span id="demo-url-4"></span>/api/random?channel_id=YOUR_CHANNEL&output=json"</pre>
                 </div>
             </div>
 
@@ -201,20 +201,21 @@ curl "<span id="demo-url-4"></span>/api/random?api_key=YOUR_KEY&format=json"</pr
             </div>
 
             <div class="api-section">
-                <h3>🔑 认证说明</h3>
+                <h3>🔑 接入说明</h3>
                 <ul>
-                    <li><strong>同源访问</strong>：前端页面访问API无需API Key，不限流</li>
-                    <li><strong>跨域访问</strong>：需要在URL中添加 <code>?api_key=YOUR_KEY</code> 参数</li>
-                    <li><strong>管理API</strong>：需要在请求头添加 <code>Authorization: Bearer admin_secret_token</code></li>
+                    <li><strong>公开访问</strong>：公开接口无需任何凭证，跨域默认放行（CORS 全局开放）</li>
+                    <li><strong>Channel</strong>：可携带 <code>channel_id</code> 参数，用于流量计量与独立限流；它不是秘密，可直接嵌在前端URL中</li>
+                    <li><strong>匿名访问</strong>：不携带 channel_id 的请求计入匿名统计，受全局兑底限流保护</li>
+                    <li><strong>管理API</strong>：需要在请求头添加 <code>Authorization: Bearer ADMIN_TOKEN</code></li>
                 </ul>
             </div>
 
             <div class="api-section">
                 <h3>⚡ 限流规则</h3>
                 <ul>
-                    <li>同源访问：<strong>不限流</strong></li>
-                    <li>跨域访问：根据API Key配置的限流规则（默认：100次/分钟）</li>
-                    <li>限流算法：滑动窗口（内存实现，高性能）</li>
+                    <li>携带 channel_id：按 Channel 配置的限流规则（滑动窗口，默认 60 次/分钟）</li>
+                    <li>匿名请求：全局兑底限流（默认 300 次/分钟，可用 ANON_RATE_LIMIT 配置）</li>
+                    <li>超限返回 429，响应携带 X-RateLimit-Limit 与 X-RateLimit-Remaining</li>
                 </ul>
             </div>
         </div>
@@ -222,13 +223,13 @@ curl "<span id="demo-url-4"></span>/api/random?api_key=YOUR_KEY&format=json"</pr
         <div class="api-demo">
             <h3>🚀 快速开始</h3>
             <div># 获取随机图片（JSON格式）</div>
-            <div>curl "<code><span id="demo-url-8"></span>/api/random?api_key=YOUR_KEY&format=json</code>"</div>
+            <div>curl "<code><span id="demo-url-8"></span>/api/random?output=json</code>"</div>
             <br>
             <div># 获取随机图片（302重定向）</div>
-            <div>curl -L "<code><span id="demo-url-9"></span>/api/random?api_key=YOUR_KEY</code>"</div>
+            <div>curl -L "<code><span id="demo-url-9"></span>/api/random</code>"</div>
             <br>
             <div># 按分类获取</div>
-            <div>curl "<code><span id="demo-url-10"></span>/api/random?api_key=YOUR_KEY&category=acg</code>"</div>
+            <div>curl "<code><span id="demo-url-10"></span>/api/random?category=acg</code>"</div>
         </div>
 
         <div class="buttons">

@@ -5,7 +5,7 @@
 ## 特性
 
 - 🎲 **随机图片 API** - 按分类、设备类型返回随机图片
-- 🔒 **API Key 认证** - 灵活的访问控制和限流
+- 🔗 **Channel 接入** - 公开接入标识，计量、独立限流与熔断
 - 🖼️ **图片代理** - 解决跨域问题，支持压缩和格式转换
 - 📱 **智能设备识别** - 自动识别 PC/移动端，返回适配图片
 - 🎨 **管理后台** - 完整的 Web UI 管理界面
@@ -45,30 +45,33 @@ go run cmd/server/main.go
 ### 获取随机图片
 
 ```bash
-# 最简单的用法（302 重定向）
-curl http://localhost:8080/api/random?api_key=YOUR_KEY
+# 最简单的用法（302 重定向，匿名访问）
+curl http://localhost:8080/api/random
+
+# 携带 Channel（计量与独立限流）
+curl http://localhost:8080/api/random?channel_id=YOUR_CHANNEL
 
 # 获取 PC 端横屏图片
-curl http://localhost:8080/api/random?api_key=YOUR_KEY&device=pc
+curl http://localhost:8080/api/random?device=pc
 
 # 获取移动端竖屏图片
-curl http://localhost:8080/api/random?api_key=YOUR_KEY&device=mobile
+curl http://localhost:8080/api/random?device=mobile
 
 # 按分类获取
-curl http://localhost:8080/api/random?api_key=YOUR_KEY&category=acg
+curl http://localhost:8080/api/random?category=acg
 
 # JSON 格式
-curl http://localhost:8080/api/random?api_key=YOUR_KEY&format=json
+curl http://localhost:8080/api/random?output=json
 ```
 
 ### HTML 中使用
 
 ```html
 <!-- 直接作为图片源 -->
-<img src="http://localhost:8080/api/random?api_key=YOUR_KEY" />
+<img src="http://localhost:8080/api/random?channel_id=YOUR_CHANNEL" />
 
 <!-- 指定分类和设备 -->
-<img src="http://localhost:8080/api/random?api_key=YOUR_KEY&category=acg&device=pc" />
+<img src="http://localhost:8080/api/random?channel_id=YOUR_CHANNEL&category=acg&device=pc" />
 ```
 
 ## 管理后台
@@ -79,7 +82,7 @@ curl http://localhost:8080/api/random?api_key=YOUR_KEY&format=json
 
 在管理后台可以：
 - 管理图片和分类
-- 创建和管理 API Key
+- 创建和管理 Channel（限流与来源绑定）
 - 查看使用统计
 - 使用脚本工具批量导入图片
 
@@ -91,6 +94,7 @@ curl http://localhost:8080/api/random?api_key=YOUR_KEY&format=json
 PORT=8080
 DB_PATH=data/randimg.db
 ADMIN_TOKEN=your_secure_token_here
+ANON_RATE_LIMIT=300
 ```
 
 ## 技术栈

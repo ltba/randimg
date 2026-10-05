@@ -65,11 +65,11 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
             case 'categories':
                 loadCategories();
                 break;
-            case 'api-keys':
-                loadAPIKeys();
+            case 'channels':
+                loadChannels();
                 break;
             case 'stats':
-                loadStatsAPIKeys();
+                loadStatsChannels();
                 break;
         }
     });
@@ -80,7 +80,7 @@ async function loadStatsOverview() {
     try {
         const data = await apiRequest('/stats/overview');
         document.getElementById('stat-images').textContent = data.total_images;
-        document.getElementById('stat-keys').textContent = data.total_api_keys;
+        document.getElementById('stat-keys').textContent = data.active_channels;
         document.getElementById('stat-today').textContent = data.today_calls;
         document.getElementById('stat-total').textContent = data.total_calls;
     } catch (error) {
@@ -373,140 +373,134 @@ async function deleteCategory(id) {
     }
 }
 
-// ========== API Key管理 ==========
-async function loadAPIKeys() {
+// ========== Channel管理 ==========
+let channelsList = [];
+
+async function loadChannels() {
     try {
-        const keys = await apiRequest('/api-keys');
-        const tbody = document.querySelector('#api-keys-table tbody');
+        const data = await apiRequest('/channels');
+        channelsList = data.data || [];
+        const tbody = document.querySelector('#channels-table tbody');
         tbody.innerHTML = '';
 
-        keys.forEach(key => {
+        channelsList.forEach(ch => {
+            const origins = (ch.allowed_origins || []).join(', ') || '-';
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${key.id}</td>
-                <td style="font-family: monospace; font-size: 12px; max-width: 300px; overflow: hidden; text-overflow: ellipsis; cursor: pointer;"
-                    title="点击复制完整Key"
-                    data-key="${key.key}"
-                    onclick="copyToClipboard('${key.key}', this)">
-                    ${key.key}
+                <td>${ch.id}</td>
+                <td style="font-family: monospace; font-size: 12px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; cursor: pointer;"
+                    title="点击复制完整Channel ID"
+                    onclick="copyToClipboard('${ch.channel_id}', this)">
+                    ${ch.channel_id}
                 </td>
-                <td>${key.rate_limit}</td>
-                <td data-status="${key.status}"><span style="color: ${key.status === 'active' ? 'green' : 'red'}">${key.status}</span></td>
-                <td>${formatDate(key.created_at)}</td>
-                <td>${formatDate(key.last_used_at)}</td>
+                <td>${ch.rate_limit}</td>
+                <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${origins}">${origins}</td>
+                <td data-status="${ch.status}"><span style="color: ${ch.status === 'active' ? 'green' : 'red'}">${ch.status}</span></td>
+                <td>${formatDate(ch.created_at)}</td>
+                <td>${formatDate(ch.last_used_at)}</td>
                 <td>
-                    <button class="btn btn-sm btn-primary" onclick="editAPIKey(${key.id})">编辑</button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteAPIKey(${key.id})">删除</button>
+                    <button class="btn btn-sm btn-primary" onclick="editChannel(${ch.id})">编辑</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteChannel(${ch.id})">删除</button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
     } catch (error) {
-        showAlert('加载API Keys失败: ' + error.message, 'error');
+        showAlert('加载Channels失败: ' + error.message, 'error');
     }
 }
 
-function showAPIKeyModal(id = null) {
-    document.getElementById('apikey-result').style.display = 'none';
-    document.getElementById('apikey-submit').style.display = 'block';
-    document.getElementById('apikey-submit').textContent = '保存';
+function parseOriginsInput(raw) {
+    return raw.split(/[\n,]/).map(s => s.trim()).filter(s => s !== '');
+}
+
+function showChannelModal(id = null) {
+    document.getElementById('channel-result').style.display = 'none';
+    document.getElementById('channel-submit').style.display = 'block';
+    document.getElementById('channel-submit').textContent = '保存';
 
     if (id) {
-        // 编辑模式
-        const keys = document.querySelectorAll('#api-keys-table tbody tr');
-        let keyData = null;
-        keys.forEach(row => {
-            const keyId = parseInt(row.querySelector('td:first-child').textContent);
-            if (keyId === id) {
-                keyData = {
-                    id: keyId,
-                    key: row.querySelector('td:nth-child(2)').dataset.key,
-                    rate_limit: parseInt(row.querySelector('td:nth-child(3)').textContent),
-                    status: row.querySelector('td:nth-child(4)').dataset.status
-                };
-            }
-        });
-
-        if (keyData) {
-            document.getElementById('apikey-modal-title').textContent = '编辑API Key';
-            document.getElementById('apikey-id').value = keyData.id;
-            document.getElementById('apikey-key').value = keyData.key;
-            document.getElementById('apikey-ratelimit').value = keyData.rate_limit;
-            document.getElementById('apikey-status').value = keyData.status;
-            document.getElementById('apikey-status-group').style.display = 'block';
+        const ch = channelsList.find(c => c.id === id);
+        if (ch) {
+            document.getElementById('channel-modal-title').textContent = '编辑Channel';
+            document.getElementById('channel-id').value = ch.id;
+            document.getElementById('channel-key').value = ch.channel_id;
+            document.getElementById('channel-ratelimit').value = ch.rate_limit;
+            document.getElementById('channel-origins').value = (ch.allowed_origins || []).join('\n');
+            document.getElementById('channel-status').value = ch.status;
+            document.getElementById('channel-status-group').style.display = 'block';
         }
     } else {
-        document.getElementById('apikey-modal-title').textContent = '创建API Key';
-        document.getElementById('apikey-form').reset();
-        document.getElementById('apikey-id').value = '';
-        document.getElementById('apikey-key').value = '';
-        document.getElementById('apikey-ratelimit').value = '60';
-        document.getElementById('apikey-status-group').style.display = 'none';
+        document.getElementById('channel-modal-title').textContent = '创建Channel';
+        document.getElementById('channel-form').reset();
+        document.getElementById('channel-id').value = '';
+        document.getElementById('channel-key').value = '';
+        document.getElementById('channel-ratelimit').value = '60';
+        document.getElementById('channel-origins').value = '';
+        document.getElementById('channel-status-group').style.display = 'none';
     }
 
-    document.getElementById('apikey-modal').classList.add('active');
+    document.getElementById('channel-modal').classList.add('active');
 }
 
-document.getElementById('apikey-form').addEventListener('submit', async (e) => {
+document.getElementById('channel-form').addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const id = document.getElementById('apikey-id').value;
-    const key = document.getElementById('apikey-key').value;
+    const id = document.getElementById('channel-id').value;
+    const customID = document.getElementById('channel-key').value.trim();
     const data = {
-        rate_limit: parseInt(document.getElementById('apikey-ratelimit').value)
+        rate_limit: parseInt(document.getElementById('channel-ratelimit').value)
     };
 
-    // 如果提供了自定义key
-    if (key) {
-        data.key = key;
+    // 创建时可自定义 channel_id; 编辑时不可修改.
+    if (customID && !id) {
+        data.channel_id = customID;
     }
-
-    // 如果是编辑模式，添加status
+    const origins = parseOriginsInput(document.getElementById('channel-origins').value);
+    if (origins.length > 0 || id) {
+        data.allowed_origins = origins;
+    }
     if (id) {
-        data.status = document.getElementById('apikey-status').value;
+        data.status = document.getElementById('channel-status').value;
     }
 
     try {
         if (id) {
-            // 更新
-            const result = await apiRequest(`/api-keys/${id}`, {
+            await apiRequest(`/channels/${id}`, {
                 method: 'PUT',
                 body: JSON.stringify(data)
             });
-            showAlert('API Key更新成功');
-            closeModal('apikey-modal');
+            showAlert('Channel更新成功');
+            closeModal('channel-modal');
         } else {
-            // 创建
-            const result = await apiRequest('/api-keys', {
+            const result = await apiRequest('/channels', {
                 method: 'POST',
                 body: JSON.stringify(data)
             });
-
-            document.getElementById('apikey-token').textContent = result.key;
-            document.getElementById('apikey-result').style.display = 'block';
-            document.getElementById('apikey-submit').style.display = 'none';
-
-            showAlert('API Key创建成功');
+            document.getElementById('channel-token').textContent = result.channel_id;
+            document.getElementById('channel-result').style.display = 'block';
+            document.getElementById('channel-submit').style.display = 'none';
+            showAlert('Channel创建成功');
         }
 
-        loadAPIKeys();
+        loadChannels();
         loadStatsOverview();
     } catch (error) {
         showAlert('操作失败: ' + error.message, 'error');
     }
 });
 
-async function editAPIKey(id) {
-    showAPIKeyModal(id);
+async function editChannel(id) {
+    showChannelModal(id);
 }
 
-async function deleteAPIKey(id) {
-    if (!confirm('确定要删除这个API Key吗？')) return;
+async function deleteChannel(id) {
+    if (!confirm('确定要删除这个Channel吗？')) return;
 
     try {
-        await apiRequest(`/api-keys/${id}`, { method: 'DELETE' });
-        showAlert('API Key删除成功');
-        loadAPIKeys();
+        await apiRequest(`/channels/${id}`, { method: 'DELETE' });
+        showAlert('Channel删除成功');
+        loadChannels();
         loadStatsOverview();
     } catch (error) {
         showAlert('删除失败: ' + error.message, 'error');
@@ -514,45 +508,45 @@ async function deleteAPIKey(id) {
 }
 
 // ========== 统计数据 ==========
-async function loadStatsAPIKeys() {
+async function loadStatsChannels() {
     try {
-        const keys = await apiRequest('/api-keys');
-        const select = document.getElementById('stats-api-key');
+        const data = await apiRequest('/channels');
+        const channels = data.data || [];
+        const select = document.getElementById('stats-channel');
         select.innerHTML = '<option value="">请选择</option>' +
-            keys.map(key => `<option value="${key.id}">${key.key.substring(0, 20)}... (ID: ${key.id})</option>`).join('');
+            channels.map(ch => `<option value="${ch.id}">${ch.channel_id.substring(0, 24)}... (ID: ${ch.id})</option>`).join('');
     } catch (error) {
-        showAlert('加载API Keys失败: ' + error.message, 'error');
+        showAlert('加载Channels失败: ' + error.message, 'error');
     }
 }
 
 async function loadStats() {
-    const apiKeyId = document.getElementById('stats-api-key').value;
-    if (!apiKeyId) {
+    const channelId = document.getElementById('stats-channel').value;
+    if (!channelId) {
         document.getElementById('stats-table').style.display = 'none';
         document.getElementById('stats-summary').style.display = 'none';
         return;
     }
 
     try {
-        const data = await apiRequest(`/stats?api_key_id=${apiKeyId}`);
+        const data = await apiRequest(`/stats?channel_id=${channelId}`);
         const tbody = document.querySelector('#stats-table tbody');
         tbody.innerHTML = '';
 
-        if (data.data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: #666;">暂无数据</td></tr>';
+        if (data.logs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: #666;">暂无数据 (统计异步落库, 最多延迟约10秒)</td></tr>';
         } else {
-            data.data.forEach(log => {
+            data.logs.forEach(log => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${formatDate(log.requested_at)}</td>
-                    <td>${log.api_key_id}</td>
+                    <td>${formatDate(log.created_at)}</td>
+                    <td>${log.channel_id}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // 显示统计摘要
-        document.getElementById('stats-total').textContent = data.count || data.data.length;
+        document.getElementById('stats-total').textContent = data.total || data.logs.length;
         document.getElementById('stats-table').style.display = 'table';
         document.getElementById('stats-summary').style.display = 'block';
     } catch (error) {

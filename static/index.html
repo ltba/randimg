@@ -16,7 +16,7 @@
                     <p id="stat-images">-</p>
                 </div>
                 <div class="stat-card">
-                    <h3>API Keys</h3>
+                    <h3>Channels</h3>
                     <p id="stat-keys">-</p>
                 </div>
                 <div class="stat-card">
@@ -33,7 +33,7 @@
         <nav>
             <button class="nav-btn active" data-section="images">图片管理</button>
             <button class="nav-btn" data-section="categories">分类管理</button>
-            <button class="nav-btn" data-section="api-keys">API Keys</button>
+            <button class="nav-btn" data-section="channels">Channels</button>
             <button class="nav-btn" data-section="stats">统计数据</button>
             <button class="nav-btn" data-section="script">脚本工具</button>
         </nav>
@@ -94,18 +94,19 @@
                 </table>
             </div>
 
-            <!-- API Keys管理 -->
-            <div class="section" id="section-api-keys">
+            <!-- Channel管理 -->
+            <div class="section" id="section-channels">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h2>API Keys</h2>
-                    <button class="btn btn-primary" onclick="showAPIKeyModal()">创建API Key</button>
+                    <h2>Channels</h2>
+                    <button class="btn btn-primary" onclick="showChannelModal()">创建Channel</button>
                 </div>
-                <table id="api-keys-table">
+                <table id="channels-table">
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Key</th>
+                            <th>Channel</th>
                             <th>限流(次/分钟)</th>
+                            <th>来源绑定</th>
                             <th>状态</th>
                             <th>创建时间</th>
                             <th>最后使用</th>
@@ -119,10 +120,10 @@
             <!-- 统计数据 -->
             <div class="section" id="section-stats">
                 <h2>统计数据</h2>
-                <p style="color: #666; margin-top: 10px;">选择API Key查看调用统计</p>
+                <p style="color: #666; margin-top: 10px;">选择 Channel 查看调用统计</p>
                 <div class="form-group" style="max-width: 300px; margin-top: 20px;">
-                    <label>API Key</label>
-                    <select id="stats-api-key" onchange="loadStats()">
+                    <label>Channel</label>
+                    <select id="stats-channel" onchange="loadStats()">
                         <option value="">请选择</option>
                     </select>
                 </div>
@@ -130,7 +131,7 @@
                     <thead>
                         <tr>
                             <th>时间</th>
-                            <th>API Key ID</th>
+                            <th>Channel ID</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -266,37 +267,41 @@ await sleep(1000); // 延迟1秒</pre>
         </div>
     </div>
 
-    <!-- API Key模态框 -->
-    <div class="modal" id="apikey-modal">
+    <!-- Channel模态框 -->
+    <div class="modal" id="channel-modal">
         <div class="modal-content">
-            <h2 id="apikey-modal-title">创建API Key</h2>
-            <form id="apikey-form">
-                <input type="hidden" id="apikey-id">
+            <h2 id="channel-modal-title">创建Channel</h2>
+            <form id="channel-form">
+                <input type="hidden" id="channel-id">
                 <div class="form-group">
-                    <label>API Key（留空自动生成）</label>
-                    <input type="text" id="apikey-key" placeholder="留空则自动生成随机Key">
-                    <small style="color: #666; font-size: 12px;">建议使用32-64位随机字符串</small>
+                    <label>Channel ID（留空自动生成）</label>
+                    <input type="text" id="channel-key" placeholder="留空则自动生成随机ID">
+                    <small style="color: #666; font-size: 12px;">8-64位字母, 数字, 连字符或下划线; 公开标识, 可直接嵌在前端URL中</small>
                 </div>
                 <div class="form-group">
                     <label>限流(次/分钟) *</label>
-                    <input type="number" id="apikey-ratelimit" required min="1" value="60">
+                    <input type="number" id="channel-ratelimit" required min="1" value="60">
                 </div>
-                <div class="form-group" id="apikey-status-group" style="display: none;">
+                <div class="form-group">
+                    <label>来源绑定（可选）</label>
+                    <textarea id="channel-origins" placeholder="每行一个 origin, 如 https://example.com; 留空不校验来源"></textarea>
+                </div>
+                <div class="form-group" id="channel-status-group" style="display: none;">
                     <label>状态</label>
-                    <select id="apikey-status">
+                    <select id="channel-status">
                         <option value="active">激活</option>
-                        <option value="revoked">已吊销</option>
+                        <option value="disabled">停用</option>
                     </select>
                 </div>
-                <div id="apikey-result" style="display: none;">
+                <div id="channel-result" style="display: none;">
                     <div class="form-group">
-                        <label>生成的API Key</label>
-                        <div class="token-display" id="apikey-token"></div>
+                        <label>生成的Channel ID</label>
+                        <div class="token-display" id="channel-token"></div>
                     </div>
                 </div>
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary" id="apikey-submit">保存</button>
-                    <button type="button" class="btn" onclick="closeModal('apikey-modal')">关闭</button>
+                    <button type="submit" class="btn btn-primary" id="channel-submit">保存</button>
+                    <button type="button" class="btn" onclick="closeModal('channel-modal')">关闭</button>
                 </div>
             </form>
         </div>
