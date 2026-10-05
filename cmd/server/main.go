@@ -152,7 +152,7 @@ func main() {
 		adminGroup.POST("/import/github/preview", ghimp.PreviewImport)
 	}
 
-	// 静态页面与前端产物: 协商缓存, 版本更新即时生效.
+	// 静态响应协商缓存: 更新即时生效.
 	r.Use(func(c *gin.Context) {
 		p := c.Request.URL.Path
 		if p == "/" || p == "/admin" || p == "/gallery" ||
@@ -162,7 +162,9 @@ func main() {
 		c.Next()
 	})
 
-	r.StaticFile("/admin", "./static/admin.html")
+	// 静态页面: admin 为 Vue 构建产物 (frontend/dist), home/gallery 迁移前仍由 static/ 服务.
+	r.StaticFile("/admin", "./frontend/dist/admin.html")
+	r.Static("/assets", "./frontend/dist/assets")
 	r.Static("/css", "./static/css")
 	r.Static("/js", "./static/js")
 	r.GET("/", func(c *gin.Context) { c.File("./static/home.html") })
