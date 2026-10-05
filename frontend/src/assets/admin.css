@@ -281,6 +281,31 @@ details.advanced summary {
 
 details.advanced[open] summary { margin-bottom: 12px; }
 
+/* 导入页双卡布局 */
+.import-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 18px;
+    align-items: start;
+}
+
+.import-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+}
+
+.import-card h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.import-card .section-hint {
+    margin-bottom: 14px;
+}
+
 /* 设置页行 */
 .setting-row {
     display: flex;
@@ -354,5 +379,9 @@ body.has-bg details.advanced {
 }
 
 body.has-bg .preview-panel {
+    background: rgba(241, 245, 249, 0.42);
+}
+
+body.has-bg .import-card {
     background: rgba(241, 245, 249, 0.42);
 }

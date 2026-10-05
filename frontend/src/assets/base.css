@@ -273,6 +273,20 @@ tbody tr:hover { background: var(--bg); }
     transition: border-color 0.15s, box-shadow 0.15s;
 }
 
+/* 下拉短控件: 固定窄宽, 不做满宽长条 */
+.form-group select {
+    width: 220px;
+    max-width: 100%;
+}
+
+/* 表单行内组合: 短控件并排 */
+.form-row {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {

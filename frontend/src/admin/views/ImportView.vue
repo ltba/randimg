@@ -1,31 +1,39 @@
 <template>
   <section>
-    <div class="page-head"><h2>批量导入</h2></div>
-    <p class="section-hint">粘贴图片 URL 列表 (每行一个, 单次最多 1000 条, 重复行自动去重)</p>
-    <form @submit.prevent="batchImport">
+    <div class="page-head"><h2>导入</h2></div>
+    <div class="import-grid">
+      <div class="import-card">
+      <h3>URL 列表导入</h3>
+      <p class="section-hint">每行一个 URL, 单次最多 1000 条, 重复行自动去重</p>
+      <form @submit.prevent="batchImport">
       <div class="form-group">
         <label>图片 URL 列表 *</label>
         <textarea v-model="batchUrls" required placeholder="https://example.com/1.jpg&#10;https://example.com/2.jpg"></textarea>
       </div>
-      <div class="form-group">
-        <label>分类 *</label>
-        <select v-model.number="batchCategoryId" required>
-          <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>
-          <input v-model="batchAutoFetch" type="checkbox" />
-          自动获取图片信息（尺寸和格式）
-        </label>
+      <div class="form-row">
+        <div class="form-group">
+          <label>分类 *</label>
+          <select v-model.number="batchCategoryId" required>
+            <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>信息补全</label>
+          <label class="setting-check">
+            <input v-model="batchAutoFetch" type="checkbox" />
+            自动获取尺寸和格式
+          </label>
+        </div>
       </div>
       <p v-if="batchHint" class="section-hint">{{ batchHint }}</p>
       <button type="submit" class="btn btn-primary">导入</button>
-    </form>
+      </form>
+      </div>
 
-    <h2 class="mt-20">GitHub 仓库导入</h2>
-    <p class="section-hint">粘贴仓库链接, 自动解析 owner / repo / 分支 / 子目录; 先预览确认再导入</p>
-    <form @submit.prevent="githubImport">
+      <div class="import-card">
+      <h3>GitHub 仓库导入</h3>
+      <p class="section-hint">粘贴仓库链接, 自动解析 owner / repo / 分支 / 子目录; 先预览确认再导入</p>
+      <form @submit.prevent="githubImport">
       <div class="form-group">
         <label>仓库链接 *</label>
         <input v-model="gh.repoUrl" type="text" required placeholder="https://github.com/owner/repo/tree/main/images" />
@@ -43,17 +51,20 @@
         <input v-model="gh.baseUrl" type="url" placeholder="https://mirror.example.com/repo" />
         <small>图源地址 = Base URL + 仓库内完整路径 (含子目录), 末尾斜杠自动忽略<br />例: 仓库子目录 randomimg/ + Base URL https://example.com/randomimg → 图源 …/randomimg/randomimg/文件名.jpg</small>
       </div>
-      <div class="form-group">
-        <label>分类 *</label>
-        <select v-model.number="gh.categoryId" required>
-          <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>
-          <input v-model="gh.autoFetch" type="checkbox" />
-          入库后自动获取图片信息
-        </label>
+      <div class="form-row">
+        <div class="form-group">
+          <label>分类 *</label>
+          <select v-model.number="gh.categoryId" required>
+            <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>信息补全</label>
+          <label class="setting-check">
+            <input v-model="gh.autoFetch" type="checkbox" />
+            自动获取尺寸和格式
+          </label>
+        </div>
       </div>
       <details class="advanced">
         <summary>高级选项 (覆盖自动解析结果)</summary>
@@ -93,7 +104,9 @@
         <button type="submit" class="btn btn-primary" :disabled="!importAllowed">导入</button>
       </div>
       <p v-if="ghResult" class="section-hint">{{ ghResult }}</p>
-    </form>
+      </form>
+      </div>
+    </div>
   </section>
 </template>
 
