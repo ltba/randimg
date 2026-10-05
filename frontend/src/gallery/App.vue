@@ -99,6 +99,11 @@ async function load() {
     console.error('Failed to load images:', error);
   } finally {
     loading.value = false;
+    // 首屏未填满时哨兵仍在视口, observer 不会再触发, 主动续载.
+    if (hasMore.value && sentinel.value) {
+      const rect = sentinel.value.getBoundingClientRect();
+      if (rect.top < window.innerHeight + 200) loadMore();
+    }
   }
 }
 
