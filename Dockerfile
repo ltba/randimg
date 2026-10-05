@@ -38,7 +38,6 @@ FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /app
 
 COPY --from=builder /build/randimg .
-COPY --from=builder /build/static ./static
 COPY --from=frontend /fe/dist ./frontend/dist
 
 # data 目录由程序启动时自动创建; 卷挂载点权限由部署侧保证.

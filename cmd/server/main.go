@@ -155,19 +155,16 @@ func main() {
 	// 静态响应协商缓存: 更新即时生效.
 	r.Use(func(c *gin.Context) {
 		p := c.Request.URL.Path
-		if p == "/" || p == "/admin" || p == "/gallery" ||
-			strings.HasPrefix(p, "/css/") || strings.HasPrefix(p, "/js/") || strings.HasPrefix(p, "/assets/") {
+		if p == "/" || p == "/admin" || p == "/gallery" || strings.HasPrefix(p, "/assets/") {
 			c.Header("Cache-Control", "no-cache")
 		}
 		c.Next()
 	})
 
-	// 静态页面: admin 为 Vue 构建产物 (frontend/dist), home/gallery 迁移前仍由 static/ 服务.
+	// 三页均为 frontend/ 的 Vue 构建产物.
 	r.StaticFile("/admin", "./frontend/dist/admin.html")
 	r.Static("/assets", "./frontend/dist/assets")
-	r.Static("/css", "./static/css")
-	r.Static("/js", "./static/js")
-	r.GET("/", func(c *gin.Context) { c.File("./static/home.html") })
+	r.GET("/", func(c *gin.Context) { c.File("./frontend/dist/home.html") })
 	r.GET("/gallery", func(c *gin.Context) { c.File("./frontend/dist/gallery.html") })
 
 	// 优雅关闭.
