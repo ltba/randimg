@@ -4,12 +4,6 @@
       <h2>Channels</h2>
       <button class="btn btn-primary" @click="openEditor(null)">创建Channel</button>
     </div>
-
-    <form class="anon-limit" @submit.prevent="saveAnonLimit">
-      <label for="anon-limit-input">匿名限流 (次/分钟)</label>
-      <input id="anon-limit-input" v-model.number="anonLimit" type="number" min="1" max="100000" required />
-      <button type="submit" class="btn btn-sm btn-primary" :disabled="savingAnon">{{ savingAnon ? '保存中...' : '保存' }}</button>
-    </form>
     <table>
       <thead>
         <tr>
@@ -105,10 +99,7 @@ const editor = reactive({
   status: 'active',
 });
 
-onMounted(() => {
-  load();
-  loadAnonLimit();
-});
+onMounted(load);
 
 defineExpose({ reload: load });
 
@@ -118,31 +109,6 @@ async function load() {
     channels.value = data.data || [];
   } catch (error) {
     toast('加载Channels失败: ' + (error as Error).message, 'error');
-  }
-}
-
-const anonLimit = ref(0);
-const savingAnon = ref(false);
-
-async function loadAnonLimit() {
-  try {
-    const data = await adminRequest<{ anon_rate_limit: number }>('/settings/anon');
-    anonLimit.value = data.anon_rate_limit;
-  } catch (error) {
-    toast('加载匿名限流失败: ' + (error as Error).message, 'error');
-  }
-}
-
-async function saveAnonLimit() {
-  if (!anonLimit.value || anonLimit.value < 1) return;
-  savingAnon.value = true;
-  try {
-    await adminRequest('/settings/anon', { method: 'PUT', body: JSON.stringify({ anon_rate_limit: anonLimit.value }) });
-    toast('匿名限流已更新');
-  } catch (error) {
-    toast('保存失败: ' + (error as Error).message, 'error');
-  } finally {
-    savingAnon.value = false;
   }
 }
 

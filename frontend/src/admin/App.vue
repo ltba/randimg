@@ -67,6 +67,7 @@
         <ChannelsView v-show="current === 'channels'" ref="channelsRef" @changed="refreshAll" />
         <StatsView v-show="current === 'stats'" ref="statsRef" />
         <ImportView v-show="current === 'import'" :categories="categories" @changed="refreshAll" />
+        <SettingsView v-show="current === 'settings'" ref="settingsRef" :bg-enabled="bgEnabled" @toggle-bg="toggleBg" />
       </div>
     </main>
 
@@ -85,6 +86,7 @@ import CategoriesView from './views/CategoriesView.vue';
 import ChannelsView from './views/ChannelsView.vue';
 import StatsView from './views/StatsView.vue';
 import ImportView from './views/ImportView.vue';
+import SettingsView from './views/SettingsView.vue';
 import TokenGate from './components/TokenGate.vue';
 import ToastHost from './components/ToastHost.vue';
 import ConfirmHost from './components/ConfirmHost.vue';
@@ -93,6 +95,7 @@ const imagesRef = ref<InstanceType<typeof ImagesView> | null>(null);
 const categoriesRef = ref<InstanceType<typeof CategoriesView> | null>(null);
 const channelsRef = ref<InstanceType<typeof ChannelsView> | null>(null);
 const statsRef = ref<InstanceType<typeof StatsView> | null>(null);
+const settingsRef = ref<InstanceType<typeof SettingsView> | null>(null);
 
 const sections = [
   { key: 'images', label: '图片管理' },
@@ -100,6 +103,7 @@ const sections = [
   { key: 'channels', label: 'Channels' },
   { key: 'stats', label: '统计数据' },
   { key: 'import', label: '导入' },
+  { key: 'settings', label: '设置' },
 ] as const;
 
 type SectionKey = (typeof sections)[number]['key'];
@@ -122,6 +126,7 @@ watch(current, v => {
     categories: categoriesRef.value,
     channels: channelsRef.value,
     stats: statsRef.value,
+    settings: settingsRef.value,
   };
   // import 视图数据由 App 的 categories 驱动, 无需重拉.
   refs[v]?.reload?.();

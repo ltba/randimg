@@ -281,21 +281,22 @@ details.advanced summary {
 
 details.advanced[open] summary { margin-bottom: 12px; }
 
-/* 匿名限流设置行 */
-.anon-limit {
+/* 设置页行 */
+.setting-row {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 18px;
 }
 
-.anon-limit label {
-    font-size: 13px;
-    color: var(--text-2);
-}
-
-.anon-limit input {
+.setting-row input {
     width: 120px;
+}
+
+.setting-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
 }
 
 /* 窄屏: sidebar 折叠为顶栏 */
