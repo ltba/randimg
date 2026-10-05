@@ -127,8 +127,9 @@ const bgEnabled = ref(localStorage.getItem('admin_bg') !== 'off');
 const bgSeed = ref(Date.now());
 
 const bgStyle = computed(() => ({
+  // 背景调用归属专用渠道 admin-bg, 统计可与真实流量分离; 渠道不存在时退化为匿名计量.
   backgroundImage: bgEnabled.value
-    ? `url('/api/random?category=acg&t=${bgSeed.value}')`
+    ? `url('/api/random?category=acg&channel_id=admin-bg&t=${bgSeed.value}')`
     : 'none',
 }));
 
