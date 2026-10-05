@@ -1,5 +1,6 @@
 # Frontend stage — Vue 3 + Vite + TypeScript, 产物三入口 (admin/home/gallery).
-FROM node:24-alpine AS frontend
+# 固定构建机原生平台: dist 为架构无关静态文件, 双架构 target 共享同一次构建, 不经 QEMU.
+FROM --platform=$BUILDPLATFORM node:24-alpine AS frontend
 
 RUN npm install -g pnpm@12.4.2
 
