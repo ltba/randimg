@@ -3,9 +3,13 @@
 package main
 
 import (
+	"flag"
+	"io"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"syscall"
 
@@ -22,8 +26,38 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// version 由构建时 ldflags -X main.version 注入.
+var version = "dev"
+
+// healthcheck 自请求 /api/stats, 供容器健康检查调用 (distroless 无 shell 工具).
+func healthcheck(port string) int {
+	resp, err := http.Get("http://127.0.0.1:" + port + "/api/stats")
+	if err != nil {
+		return 1
+	}
+	defer resp.Body.Close()
+	io.Copy(io.Discard, resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return 1
+	}
+	return 0
+}
+
 func main() {
+	check := flag.Bool("healthcheck", false, "self-check /api/stats then exit")
+	flag.Parse()
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	if *check {
+		os.Exit(healthcheck(port))
+	}
+
 	_ = godotenv.Load()
+
+	log.Printf("RandImg %s starting...", version)
 
 	// ADMIN_TOKEN 未配置时回退默认值并输出告警.
 	if os.Getenv("ADMIN_TOKEN") == "" {
@@ -33,6 +67,12 @@ func main() {
 	dbPath := os.Getenv("DB_PATH")
 	if dbPath == "" {
 		dbPath = "data/randimg.db"
+	}
+	// data 目录自动创建 (distroless 无 shell, 不能 RUN mkdir).
+	if dir := filepath.Dir(dbPath); dir != "" && dir != "." {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			log.Fatalf("Failed to create data directory: %v", err)
+		}
 	}
 	if err := store.InitDB(dbPath); err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
@@ -124,10 +164,6 @@ func main() {
 		os.Exit(0)
 	}()
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
 	log.Printf("Server starting on port %s...", port)
 	if err := r.Run(":" + port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)

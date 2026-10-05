@@ -1,51 +1,28 @@
-# Build stage
-FROM golang:1.23.5-alpine AS builder
+# Build stage — CGO_ENABLED=0: glebarez/sqlite 为 pure Go 驱动, 产物静态链接.
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /build
 
-# Install build dependencies
-RUN apk add --no-cache git gcc musl-dev
-
-# Copy go mod files
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source code
 COPY . .
 
-# Build the application
-RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -ldflags="-s -w" -o randimg ./cmd/server
+ARG VERSION=dev
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w -X main.version=${VERSION}" -o randimg ./cmd/server
 
-# Runtime stage
-FROM alpine:latest
+# Runtime stage — distroless/static 自带 CA 证书 (出站 https 拉图源), nonroot 以 UID 65532 运行.
+FROM gcr.io/distroless/static-debian12:nonroot
 
 WORKDIR /app
 
-# Install runtime dependencies
-RUN apk add --no-cache ca-certificates tzdata
-
-# Copy binary from builder
 COPY --from=builder /build/randimg .
-
-COPY --from=builder /build/.env.example .env
-
-# Copy static files
 COPY --from=builder /build/static ./static
 
-# Create data directory for SQLite database
-RUN mkdir -p /app/data
+# data 目录由程序启动时自动创建; 卷挂载点权限由部署侧保证.
 
-# Set environment variables
-# ENV PORT=8080 \
-#     DB_PATH=/app/data/randimg.db \
-#     GIN_MODE=release
+EXPOSE 8080
 
-# Expose port
-# EXPOSE 8080
+USER nonroot
 
-# Health check
-# HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-#     CMD wget --no-verbose --tries=1 --spider http://localhost:8080/api/stats || exit 1
-
-# Run the application
-CMD ["./randimg"]
+ENTRYPOINT ["./randimg"]

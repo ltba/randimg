@@ -1,0 +1,15 @@
+# 版本控制与 CI
+.git
+.github
+.gitignore
+.gitattributes
+
+# 本地配置与数据 (防本地误打包)
+.env
+.env.local
+data
+*.db
+
+# 文档
+README.md
+LICENSE

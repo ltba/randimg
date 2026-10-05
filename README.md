@@ -17,14 +17,18 @@
 ### Docker 部署（推荐）
 
 ```bash
-# 下载 compose.yml
-curl -O https://raw.githubusercontent.com/ltba/randimg/main/compose.yml
+# 下载 compose 文件与环境变量示例
+curl -O https://raw.githubusercontent.com/ltba/randimg/main/docker-compose.yml
+curl -O https://raw.githubusercontent.com/ltba/randimg/main/.env.example
+cp .env.example .env   # 按需修改 ADMIN_TOKEN 等
 
 # 启动服务
 docker compose up -d
 ```
 
 访问 `http://localhost:8080` 查看首页，`http://localhost:8080/admin` 进入管理后台。
+
+镜像标签： `latest` 跟随主分支， `v*` 为语义化版本（tag 发布）， `sha-*` 为具体提交，可按需钉住版本。
 
 ### 本地运行
 
