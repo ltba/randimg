@@ -40,3 +40,7 @@ Thumbs.db
 # Environment
 .env
 .env.local
+.trellis/
+.agents/
+.pi/
+AGENTS.md
