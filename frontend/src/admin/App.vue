@@ -192,7 +192,7 @@ onMounted(refreshAll);
   position: fixed;
   inset: 0;
   z-index: -1;
-  background: rgba(15, 23, 42, 0.1);
+  background: rgba(15, 23, 42, 0.28);
 }
 
 .bg-btn {
