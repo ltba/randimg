@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="background" id="background" :style="{ backgroundImage: `url('/api/random?category=acg&output=proxy&compress=true&t=${bgSeed}')` }"></div>
+    <div class="background" id="background" :style="{ backgroundImage: `url('/api/random?category=acg&t=${bgSeed}')` }"></div>
     <div class="background-overlay"></div>
 
     <div class="container">

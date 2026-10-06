@@ -104,7 +104,7 @@ ANON_RATE_LIMIT=300
 ## 技术栈
 
 - **后端**: Go 1.23 + Gin + GORM + SQLite
-- **前端**: 原生 HTML/CSS/JavaScript
+- **前端**: Vue 3 + Vite + TypeScript
 - **部署**: Docker + GitHub Actions
 
 ## 许可证

@@ -139,7 +139,7 @@ const bgSeed = ref(Date.now());
 const bgStyle = computed(() => ({
   // 背景匿名调用: 不计量 (统计仅计 Channel), 受匿名桶兜底限流.
   backgroundImage: bgEnabled.value
-    ? `url('/api/random?category=acg&output=proxy&compress=true&t=${bgSeed.value}')`
+    ? `url('/api/random?category=acg&t=${bgSeed.value}')`
     : 'none',
 }));
 
